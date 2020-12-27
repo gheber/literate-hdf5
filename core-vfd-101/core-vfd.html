@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2020-12-27 Sun 08:39 -->
+<!-- 2020-12-27 Sun 16:09 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Using Memory-Backed HDF5 Files to Reduce Storage Access and Size</title>
@@ -236,59 +236,59 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org4e068cd">1. Introduction</a>
+<li><a href="#orga462c9c">1. Introduction</a>
 <ul>
-<li><a href="#org5ad19e1">1.1. Caveat Emptor</a></li>
-<li><a href="#org4ecb93f">1.2. Syntax</a></li>
-<li><a href="#org6958fe8">1.3. Logistics</a></li>
+<li><a href="#org115be38">1.1. Caveat Emptor</a></li>
+<li><a href="#org88588b4">1.2. Syntax</a></li>
+<li><a href="#orga748cb1">1.3. Logistics</a></li>
 </ul>
 </li>
-<li><a href="#orgb57eeec">2. Basic Use  </a>
+<li><a href="#org18f2cec">2. Basic Use  </a>
 <ul>
-<li><a href="#orgad7bcf5">2.1. Goal</a></li>
-<li><a href="#orgbdb6b2a">2.2. Outline for an HDF5 file in a file system</a></li>
-<li><a href="#orgb20a247">2.3. Outline for a memory-backed HDF5 file</a></li>
-<li><a href="#orgbe8b49c">2.4. Discussion</a></li>
+<li><a href="#org0d0dcf9">2.1. Goal</a></li>
+<li><a href="#orgb838191">2.2. Outline for an HDF5 file in a file system</a></li>
+<li><a href="#org6229835">2.3. Outline for a memory-backed HDF5 file</a></li>
+<li><a href="#orgb35dc7e">2.4. Discussion</a></li>
 </ul>
 </li>
-<li><a href="#org80c9a2e">3. Copying Objects </a>
+<li><a href="#org5f0d7dc">3. Copying Objects </a>
 <ul>
-<li><a href="#orgccd1b68">3.1. Goal</a></li>
-<li><a href="#org7746078">3.2. Outline</a></li>
-<li><a href="#orgcd3d4cd">3.3. Discussion</a></li>
+<li><a href="#org79c16b5">3.1. Goal</a></li>
+<li><a href="#orgd99aff6">3.2. Outline</a></li>
+<li><a href="#orgeb6ebcf">3.3. Discussion</a></li>
 </ul>
 </li>
-<li><a href="#org47c7ad4">4. Delaying Decisions </a>
+<li><a href="#org5856944">4. Delaying Decisions </a>
 <ul>
-<li><a href="#orgc8f42e8">4.1. Goal</a></li>
-<li><a href="#org440e581">4.2. Outline</a></li>
-<li><a href="#orgb4f74e3">4.3. Discussion</a></li>
+<li><a href="#org737ac13">4.1. Goal</a></li>
+<li><a href="#org1437f2e">4.2. Outline</a></li>
+<li><a href="#orge600ae1">4.3. Discussion</a></li>
 </ul>
 </li>
-<li><a href="#org699094e">5. Building Blocks </a>
+<li><a href="#orgf1c4d69">5. Building Blocks </a>
 <ul>
-<li><a href="#org4af5ac0">5.1. On-disk HDF5 file creation </a></li>
-<li><a href="#org4c691f4">5.2. In-memory HDF5 file creation </a></li>
-<li><a href="#org8c6def8">5.3. Dataset creation </a></li>
-<li><a href="#org48f3084">5.4. Print library and file info</a></li>
-<li><a href="#org98fa3e3">5.5. Big dataset creation </a></li>
-<li><a href="#org85dacd0">5.6. Dataset size </a></li>
-<li><a href="#orgc850a4c">5.7. Compact replica </a></li>
-<li><a href="#org4c4b344">5.8. Data transfer </a></li>
+<li><a href="#orge334ca6">5.1. On-disk HDF5 file creation </a></li>
+<li><a href="#org368893a">5.2. In-memory HDF5 file creation </a></li>
+<li><a href="#org5dc404e">5.3. Dataset creation </a></li>
+<li><a href="#org734c661">5.4. Print library and file info</a></li>
+<li><a href="#orgbe35d3c">5.5. Big dataset creation </a></li>
+<li><a href="#orge326dd2">5.6. Dataset size </a></li>
+<li><a href="#org35417b7">5.7. Compact replica </a></li>
+<li><a href="#orge16b956">5.8. Data transfer </a></li>
 </ul>
 </li>
-<li><a href="#org73e53dc">6. Appendix</a>
+<li><a href="#org0812f2a">6. Appendix</a>
 <ul>
-<li><a href="#org0d63760">6.1. Versions</a></li>
-<li><a href="#orgc94cd15">6.2. Boilerplate with a twist</a></li>
+<li><a href="#orgf71a32e">6.1. Versions</a></li>
+<li><a href="#orgc6a721b">6.2. Boilerplate with a twist</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org4e068cd" class="outline-2">
-<h2 id="org4e068cd"><span class="section-number-2">1</span> Introduction</h2>
+<div id="outline-container-orga462c9c" class="outline-2">
+<h2 id="orga462c9c"><span class="section-number-2">1</span> Introduction</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Logically, an HDF5 file stored in a file system is just a sequence of bytes
@@ -308,9 +308,10 @@ The life-cycle of memory-backed HDF5 files is very simple:
 a file system. (It is also possible to load existing HDF5 files into
 memory buffers.)</li>
 <li>For the lifetime of the application perform HDF5 I/O operations as usual.</li>
-<li>Before application shutdown decide whether to abandon the RAM buffer or to
-persist certain parts of it in an HDF5 file in a file system.</li>
-</ol>
+<li><p>
+Before application shutdown decide whether to abandon the RAM buffer or to
+persist certain parts of it in an HDF5 file in a file system.
+</p>
 
 <p>
 The obvious use case for in-memory HDF5 files is their use as <i>I/O buffers</i>,
@@ -332,15 +333,16 @@ details. See ??? for that.
 
 <p>
 This document is organized as follows: First, we present three examples
-(sections <a href="#org54a5e41">2</a>, <a href="#org431525d">3</a>, <a href="#orge646be0">4</a>) with
+(sections <a href="#orgf8ebb61">2</a>, <a href="#org90c9fa3">3</a>, <a href="#orgad08dda">4</a>) with
 their code outlines and their actual behavior. In section
-<a href="#orgb845d0a">5</a>, we show the implementation of their (common) building
+<a href="#org4c28916">5</a>, we show the implementation of their (common) building
 blocks.
-</p>
+</p></li>
+</ol>
 </div>
 
-<div id="outline-container-org5ad19e1" class="outline-3">
-<h3 id="org5ad19e1"><span class="section-number-3">1.1</span> Caveat Emptor</h3>
+<div id="outline-container-org115be38" class="outline-3">
+<h3 id="org115be38"><span class="section-number-3">1.1</span> Caveat Emptor</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
 The examples in this document are developed by incremental refinement. They
@@ -366,8 +368,8 @@ corner cases that were not considered.
 </div>
 </div>
 
-<div id="outline-container-org4ecb93f" class="outline-3">
-<h3 id="org4ecb93f"><span class="section-number-3">1.2</span> Syntax</h3>
+<div id="outline-container-org88588b4" class="outline-3">
+<h3 id="org88588b4"><span class="section-number-3">1.2</span> Syntax</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
 The basic syntactic element to denote a code block with a deferred
@@ -389,8 +391,8 @@ written in C++, that would be one way to go about it.)
 </div>
 </div>
 
-<div id="outline-container-org6958fe8" class="outline-3">
-<h3 id="org6958fe8"><span class="section-number-3">1.3</span> Logistics</h3>
+<div id="outline-container-orga748cb1" class="outline-3">
+<h3 id="orga748cb1"><span class="section-number-3">1.3</span> Logistics</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
 There are several ways to run the examples contained in this document.
@@ -447,8 +449,8 @@ appropriate include and library paths for HDF5.
 </div>
 </div>
 
-<div id="outline-container-orgb57eeec" class="outline-2">
-<h2 id="orgb57eeec"><span class="section-number-2">2</span> Basic Use  <a id="org54a5e41"></a></h2>
+<div id="outline-container-org18f2cec" class="outline-2">
+<h2 id="org18f2cec"><span class="section-number-2">2</span> Basic Use  <a id="orgf8ebb61"></a></h2>
 <div class="outline-text-2" id="text-2">
 <p>
 The HDF5 library supports an in-memory, aka. in-<i>core</i>, representation of HDF5
@@ -466,8 +468,8 @@ HDF5 files is as straightforward as working with HDF5 files in a file system.
 </p>
 </div>
 
-<div id="outline-container-orgad7bcf5" class="outline-3">
-<h3 id="orgad7bcf5"><span class="section-number-3">2.1</span> Goal</h3>
+<div id="outline-container-org0d0dcf9" class="outline-3">
+<h3 id="org0d0dcf9"><span class="section-number-3">2.1</span> Goal</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 <i>We would like to write an array of integers to a 2D dataset in a
@@ -481,8 +483,8 @@ ordinary HDF5 files!
 </div>
 </div>
 
-<div id="outline-container-orgbdb6b2a" class="outline-3">
-<h3 id="orgbdb6b2a"><span class="section-number-3">2.2</span> Outline for an HDF5 file in a file system</h3>
+<div id="outline-container-orgb838191" class="outline-3">
+<h3 id="orgb838191"><span class="section-number-3">2.2</span> Outline for an HDF5 file in a file system</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 Given our important array <code>data</code>, we:
@@ -491,9 +493,10 @@ Given our important array <code>data</code>, we:
 <li>Create an HDF5 file, <code>disk.h5</code></li>
 <li>Create a suitably sized and typed dataset <code>/2x3</code>, and write <code>data</code></li>
 <li>Close the dataset</li>
-<li>Close the file, after printing the HDF5 library version and the file size
-on-disk</li>
-</ol>
+<li><p>
+Close the file, after printing the HDF5 library version and the file size
+on-disk
+</p>
 
 <p>
 <b><b>Note:</b></b> The paragraph following the outline shows the actual program
@@ -508,16 +511,16 @@ output.
 <span class="linenr"> 5: </span>{
 <span class="linenr"> 6: </span>  <span style="color: #6434A3;">int</span> <span style="color: #BA36A5;">data</span>[] = {0, 1, 2, 3, 4, 5};
 <span class="linenr"> 7: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file</span> = (*
-<span id="coderef-vfd0-blk0" class="coderef-off"><span class="linenr"> 8: </span>                 &lt;&lt;make-disk-file&gt;&gt; ) (<span style="color: #008000;">"disk.h5"</span>);</span>
+<span id="coderef-vfd0-blk0" class="coderef-off"><span class="linenr"> 8: </span>                &lt;&lt;make-disk-file&gt;&gt; ) (<span style="color: #008000;">"disk.h5"</span>);</span>
 <span class="linenr"> 9: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dset</span> = (*
-<span id="coderef-vfd0-blk1" class="coderef-off"><span class="linenr">10: </span>                 &lt;&lt;make-2D-dataset&gt;&gt; ) (file, <span style="color: #008000;">"2x3"</span>, H5T_STD_I32LE,</span>
-<span class="linenr">11: </span>                                        (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
+<span id="coderef-vfd0-blk1" class="coderef-off"><span class="linenr">10: </span>                &lt;&lt;make-2D-dataset&gt;&gt; ) (file, <span style="color: #008000;">"2x3"</span>, H5T_STD_I32LE,</span>
+<span class="linenr">11: </span>                                       (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
 <span class="linenr">12: </span>  H5Dclose(dset);
 <span class="linenr">13: </span>
 <span class="linenr">14: </span>  (*
-<span class="linenr">15: </span>    &lt;&lt;print-lib-version&gt;&gt; ) ();
+<span class="linenr">15: </span>   &lt;&lt;print-lib-version&gt;&gt; ) ();
 <span class="linenr">16: </span>  (*
-<span class="linenr">17: </span>    &lt;&lt;print-file-size&gt;&gt; ) (file);
+<span class="linenr">17: </span>   &lt;&lt;print-file-size&gt;&gt; ) (file);
 <span class="linenr">18: </span>
 <span class="linenr">19: </span>  H5Fclose(file);
 <span class="linenr">20: </span>
@@ -535,25 +538,26 @@ File size: 4096 bytes
 
 <p>
 The <code>&lt;&lt;boilerplate&gt;&gt;</code> block on line <a href="#coderef-vfd0-boiler" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-vfd0-boiler');" onmouseout="CodeHighlightOff(this, 'coderef-vfd0-boiler');">1</a> has the usual <code>include</code>
-directives and is provided in the <a href="#orgc94cd15">appendix</a>.
+directives and is provided in the <a href="#orgc6a721b">appendix</a>.
 </p>
 
 <p>
 The <code>&lt;&lt;make-disk-file&gt;&gt;</code> block (line <a href="#coderef-vfd0-blk0" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-vfd0-blk0');" onmouseout="CodeHighlightOff(this, 'coderef-vfd0-blk0');">7</a>) is merely a call to
-<code>H5Fcreate</code> (see section <a href="#org65f92c5">5.1</a>) and the
+<code>H5Fcreate</code> (see section <a href="#orge21664a">5.1</a>) and the
 <code>&lt;&lt;make-2D-dataset&gt;&gt;</code> block (line <a href="#coderef-vfd0-blk1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-vfd0-blk1');" onmouseout="CodeHighlightOff(this, 'coderef-vfd0-blk1');">9</a>) is a call to <code>H5Dcreate</code> with
-all the trimmings (see section <a href="#org4ace2ec">5.3</a>).
-</p>
+all the trimmings (see section <a href="#org5f261c0">5.3</a>).
+</p></li>
+</ol>
 </div>
 </div>
 
-<div id="outline-container-orgb20a247" class="outline-3">
-<h3 id="orgb20a247"><span class="section-number-3">2.3</span> Outline for a memory-backed HDF5 file</h3>
+<div id="outline-container-org6229835" class="outline-3">
+<h3 id="org6229835"><span class="section-number-3">2.3</span> Outline for a memory-backed HDF5 file</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 The outline for memory-backed HDF5 files is almost identical to on-disk
 files. The <code>&lt;&lt;make-mem-file&gt;&gt;</code> block on line <a href="#coderef-mem-file-creation" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-mem-file-creation');" onmouseout="CodeHighlightOff(this, 'coderef-mem-file-creation');">7</a> has two
-additional arguments (see section <a href="#org18fb14a">5.2</a>). The first is the
+additional arguments (see section <a href="#orgf410aa7">5.2</a>). The first is the
 increment (in bytes) by which the backing memory buffer will grow, should
 that be necessary. In this example, it's 1 MiB. The third parameter, a flag,
 controls if the memory-backed file is persisted in storage after closing.
@@ -570,16 +574,16 @@ after running the program.
 <span class="linenr"> 5: </span>{
 <span class="linenr"> 6: </span>  <span style="color: #6434A3;">int</span> <span style="color: #BA36A5;">data</span>[] = {0, 1, 2, 3, 4, 5};
 <span class="linenr"> 7: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file</span> = (*
-<span id="coderef-mem-file-creation" class="coderef-off"><span class="linenr"> 8: </span>                 &lt;&lt;make-mem-file&gt;&gt; ) (<span style="color: #008000;">"core.h5"</span>, 1024*1024, (argc &gt; 1));</span>
+<span id="coderef-mem-file-creation" class="coderef-off"><span class="linenr"> 8: </span>                &lt;&lt;make-mem-file&gt;&gt; ) (<span style="color: #008000;">"core.h5"</span>, 1024*1024, (argc &gt; 1));</span>
 <span class="linenr"> 9: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dset</span> = (*
-<span class="linenr">10: </span>                 &lt;&lt;make-2D-dataset&gt;&gt; ) (file, <span style="color: #008000;">"2x3"</span>, H5T_STD_I32LE,
-<span class="linenr">11: </span>                                        (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
+<span class="linenr">10: </span>                &lt;&lt;make-2D-dataset&gt;&gt; ) (file, <span style="color: #008000;">"2x3"</span>, H5T_STD_I32LE,
+<span class="linenr">11: </span>                                       (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
 <span class="linenr">12: </span>  H5Dclose(dset);
 <span class="linenr">13: </span>
 <span class="linenr">14: </span>  (*
-<span class="linenr">15: </span>    &lt;&lt;print-lib-version&gt;&gt; ) ();
+<span class="linenr">15: </span>   &lt;&lt;print-lib-version&gt;&gt; ) ();
 <span class="linenr">16: </span>  (*
-<span class="linenr">17: </span>    &lt;&lt;print-file-size&gt;&gt; ) (file);
+<span class="linenr">17: </span>   &lt;&lt;print-file-size&gt;&gt; ) (file);
 <span class="linenr">18: </span>
 <span class="linenr">19: </span>  H5Fclose(file);
 <span class="linenr">20: </span>
@@ -602,19 +606,21 @@ line <a href="#coderef-mem-file-creation" class="coderef" onmouseover="CodeHighl
 
 <ol class="org-ol">
 <li>We are dealing with HDF5 files after all.</li>
-<li>The switch to memory-backed HDF5 files requires only minor changes of
-existing applications.</li>
-</ol>
+<li><p>
+The switch to memory-backed HDF5 files requires only minor changes of
+existing applications.
+</p>
 
 <p>
-See section <a href="#org18fb14a">5.2</a> for the implementation of
+See section <a href="#orgf410aa7">5.2</a> for the implementation of
 <code>&lt;&lt;make-mem-files&gt;&gt;</code>.
-</p>
+</p></li>
+</ol>
 </div>
 </div>
 
-<div id="outline-container-orgbe8b49c" class="outline-3">
-<h3 id="orgbe8b49c"><span class="section-number-3">2.4</span> Discussion</h3>
+<div id="outline-container-orgb35dc7e" class="outline-3">
+<h3 id="orgb35dc7e"><span class="section-number-3">2.4</span> Discussion</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 When running the executable <code>core-vfd1</code> for the memory-backed HDF5 file, we
@@ -639,38 +645,38 @@ in file systems.
 </div>
 </div>
 
-<div id="outline-container-org80c9a2e" class="outline-2">
-<h2 id="org80c9a2e"><span class="section-number-2">3</span> Copying Objects <a id="org431525d"></a></h2>
+<div id="outline-container-org5f0d7dc" class="outline-2">
+<h2 id="org5f0d7dc"><span class="section-number-2">3</span> Copying Objects <a id="org90c9fa3"></a></h2>
 <div class="outline-text-2" id="text-3">
 <p>
-We can copy HDF5 objects such as groups and datasets inside the same HDF5
-file or across HDF5 files. A common scenario is to use a memory-backed HDF5
-file as a scratch space (or RAM disk) and, before closing it, to store only a
-few selected objects of interest in an on-disk HDF5 file.
+We can copy HDF5 objects such as groups and datasets inside the same HDF5 file
+or across HDF5 files. A common scenario is to use a memory-backed HDF5 file as
+a scratch space (or RAM disk) and, before closing it, to store only a few
+selected objects of interest in an on-disk HDF5 file.
 </p>
 </div>
 
-<div id="outline-container-orgccd1b68" class="outline-3">
-<h3 id="orgccd1b68"><span class="section-number-3">3.1</span> Goal</h3>
+<div id="outline-container-org79c16b5" class="outline-3">
+<h3 id="org79c16b5"><span class="section-number-3">3.1</span> Goal</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
-<i>We would like to copy a dataset from a memory-backed HDF5 file to an HDF5
-file stored in a file system.</i>
+<i>We would like to copy a dataset from a memory-backed HDF5 file to an HDF5 file
+stored in a file system.</i>
 </p>
 </div>
 </div>
 
-<div id="outline-container-org7746078" class="outline-3">
-<h3 id="org7746078"><span class="section-number-3">3.2</span> Outline</h3>
+<div id="outline-container-orgd99aff6" class="outline-3">
+<h3 id="orgd99aff6"><span class="section-number-3">3.2</span> Outline</h3>
 <div class="outline-text-3" id="text-3-2">
 <p>
-In this example, we are working with two HDF5 files, one memory-backed and
-the other in a file system. We re-use the file creation building blocks
-(lines <a href="#coderef-copy-file1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-file1');" onmouseout="CodeHighlightOff(this, 'coderef-copy-file1');">8</a>, <a href="#coderef-copy-file2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-file2');" onmouseout="CodeHighlightOff(this, 'coderef-copy-file2');">10</a>) and the dataset creation building block
-(line <a href="#coderef-copy-mdset" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-mdset');" onmouseout="CodeHighlightOff(this, 'coderef-copy-mdset');">12</a>) to create a dataset <code>dset_m</code> in the memory-backed HDF5
-file <code>file_m</code>. Fortunately, the HDF5 library provides a function, <code>H5Ocopy</code>,
-for copying HDF5 objects between HDF5 files. All we have to do is call it on
-line <a href="#coderef-copy-call" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-call');" onmouseout="CodeHighlightOff(this, 'coderef-copy-call');">21</a>.
+In this example, we are working with two HDF5 files, one memory-backed and the
+other in a file system. We re-use the file creation building blocks (lines
+<a href="#coderef-copy-file1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-file1');" onmouseout="CodeHighlightOff(this, 'coderef-copy-file1');">8</a>, <a href="#coderef-copy-file2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-file2');" onmouseout="CodeHighlightOff(this, 'coderef-copy-file2');">10</a>) and the dataset creation building block (line
+<a href="#coderef-copy-mdset" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-mdset');" onmouseout="CodeHighlightOff(this, 'coderef-copy-mdset');">12</a>) to create a dataset <code>dset_m</code> in the memory-backed HDF5 file
+<code>file_m</code>. Fortunately, the HDF5 library provides a function, <code>H5Ocopy</code>, for
+copying HDF5 objects between HDF5 files. All we have to do is call it on line
+<a href="#coderef-copy-call" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-call');" onmouseout="CodeHighlightOff(this, 'coderef-copy-call');">21</a>.
 </p>
 
 <div class="org-src-container">
@@ -682,25 +688,25 @@ line <a href="#coderef-copy-call" class="coderef" onmouseover="CodeHighlightOn(t
 <span class="linenr"> 6: </span>  <span style="color: #6434A3;">int</span> <span style="color: #BA36A5;">data</span>[] = {0, 1, 2, 3, 4, 5};
 <span class="linenr"> 7: </span>
 <span class="linenr"> 8: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file_d</span> = (*
-<span id="coderef-copy-file1" class="coderef-off"><span class="linenr"> 9: </span>                   &lt;&lt;make-disk-file&gt;&gt; ) (<span style="color: #008000;">"disk.h5"</span>);</span>
+<span id="coderef-copy-file1" class="coderef-off"><span class="linenr"> 9: </span>                  &lt;&lt;make-disk-file&gt;&gt; ) (<span style="color: #008000;">"disk.h5"</span>);</span>
 <span class="linenr">10: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file_m</span> = (*
-<span id="coderef-copy-file2" class="coderef-off"><span class="linenr">11: </span>                   &lt;&lt;make-mem-file&gt;&gt; ) (<span style="color: #008000;">"core.h5"</span>, 4096, (argc &gt; 1));</span>
+<span id="coderef-copy-file2" class="coderef-off"><span class="linenr">11: </span>                  &lt;&lt;make-mem-file&gt;&gt; ) (<span style="color: #008000;">"core.h5"</span>, 4096, (argc &gt; 1));</span>
 <span class="linenr">12: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dset_m</span> = (*
-<span id="coderef-copy-mdset" class="coderef-off"><span class="linenr">13: </span>                   &lt;&lt;make-2D-dataset&gt;&gt; ) (file_m, <span style="color: #008000;">"2x3"</span>, H5T_STD_I32LE,</span>
-<span class="linenr">14: </span>                                          (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
+<span id="coderef-copy-mdset" class="coderef-off"><span class="linenr">13: </span>                  &lt;&lt;make-2D-dataset&gt;&gt; ) (file_m, <span style="color: #008000;">"2x3"</span>, H5T_STD_I32LE,</span>
+<span class="linenr">14: </span>                                         (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
 <span class="linenr">15: </span>  H5Dclose(dset_m);
 <span class="linenr">16: </span>
 <span class="linenr">17: </span>  (*
-<span class="linenr">18: </span>    &lt;&lt;print-lib-version&gt;&gt; ) ();
+<span class="linenr">18: </span>   &lt;&lt;print-lib-version&gt;&gt; ) ();
 <span class="linenr">19: </span>  (*
-<span class="linenr">20: </span>    &lt;&lt;print-file-size&gt;&gt; ) (file_m);
+<span class="linenr">20: </span>   &lt;&lt;print-file-size&gt;&gt; ) (file_m);
 <span class="linenr">21: </span>
 <span id="coderef-copy-call" class="coderef-off"><span class="linenr">22: </span>  H5Ocopy(file_m, <span style="color: #008000;">"2x3"</span>, file_d, <span style="color: #008000;">"2x3copy"</span>, H5P_DEFAULT, H5P_DEFAULT);</span>
 <span class="linenr">23: </span>
 <span class="linenr">24: </span>  H5Fclose(file_m);
 <span class="linenr">25: </span>
 <span class="linenr">26: </span>  (*
-<span class="linenr">27: </span>    &lt;&lt;print-file-size&gt;&gt; ) (file_d);
+<span class="linenr">27: </span>   &lt;&lt;print-file-size&gt;&gt; ) (file_d);
 <span class="linenr">28: </span>
 <span class="linenr">29: </span>  H5Fclose(file_d);
 <span class="linenr">30: </span>
@@ -719,39 +725,38 @@ File size: 4096 bytes
 </div>
 </div>
 
-<div id="outline-container-orgcd3d4cd" class="outline-3">
-<h3 id="orgcd3d4cd"><span class="section-number-3">3.3</span> Discussion</h3>
+<div id="outline-container-orgeb6ebcf" class="outline-3">
+<h3 id="orgeb6ebcf"><span class="section-number-3">3.3</span> Discussion</h3>
 <div class="outline-text-3" id="text-3-3">
 <p>
 When running the program <code>core-vfd2</code>, we are informed that, for HDF5 library
-version 1.13.0, both files have a size of 4 KiB. That is a coincidence of
-two independent factors: Firstly, in line <a href="#coderef-copy-file2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-file2');" onmouseout="CodeHighlightOff(this, 'coderef-copy-file2');">10</a>, we instructed the
-HDF5 library to grow the memory-backed HDF5 file in 4 KiB increments, and
-one increment is plenty to accommodate our small dataset. Secondly, the 4
-KiB size of the <code>disk.h5</code> file is due to paged allocation with 4 KiB being
-the default page size. (<i>Really?</i>)
+version 1.13.0, both files have a size of 4 KiB. That is a coincidence of two
+independent factors: Firstly, in line <a href="#coderef-copy-file2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-copy-file2');" onmouseout="CodeHighlightOff(this, 'coderef-copy-file2');">10</a>, we instructed the HDF5
+library to grow the memory-backed HDF5 file in 4 KiB increments, and one
+increment is plenty to accommodate our small dataset. Secondly, the 4 KiB size
+of the <code>disk.h5</code> file is due to paged allocation with 4 KiB being the default
+page size. (<i>Really?</i>)
 </p>
 
 <p>
 <b><b>Bottom line:</b></b> Transferring objects or parts of a hierarchy from a
-memory-backed HDF5 file to another HDF5 file, be it in a file system or
-another memory-backed file, is easy thanks to <code>H5Ocopy</code>!
+memory-backed HDF5 file to another HDF5 file, be it in a file system or another
+memory-backed file, is easy thanks to <code>H5Ocopy</code>!
 </p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org47c7ad4" class="outline-2">
-<h2 id="org47c7ad4"><span class="section-number-2">4</span> Delaying Decisions <a id="orge646be0"></a></h2>
+<div id="outline-container-org5856944" class="outline-2">
+<h2 id="org5856944"><span class="section-number-2">4</span> Delaying Decisions <a id="orgad08dda"></a></h2>
 <div class="outline-text-2" id="text-4">
 <p>
-The developers and maintainers of certain application types, for example,
-data persistence back-ends of interactive applications, face specific
-challenges which stem from the <i>uncertainty</i> over the particular course of
-action(s) their users take as part of a transaction or over the duration of a
-session. Ideally, any decisions that amount to commitments not easily undone
-later can be postponed or delayed until a better informed decision can be
-made.
+The developers and maintainers of certain application types, for example, data
+persistence back-ends of interactive applications, face specific challenges
+which stem from the <i>uncertainty</i> over the particular course of action(s) their
+users take as part of a transaction or over the duration of a session. Ideally,
+any decisions that amount to commitments not easily undone later can be
+postponed or delayed until a better informed decision can be made.
 </p>
 
 <p>
@@ -765,24 +770,24 @@ uncertain at object creation time.
 </p>
 </div>
 
-<div id="outline-container-orgc8f42e8" class="outline-3">
-<h3 id="orgc8f42e8"><span class="section-number-3">4.1</span> Goal</h3>
+<div id="outline-container-org737ac13" class="outline-3">
+<h3 id="org737ac13"><span class="section-number-3">4.1</span> Goal</h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
-<i>We would like to maintain a potentially very large 2D dataset in a
+/We would like to maintain a potentially very large 2D dataset in a
 memory-backed HDF5 file and eventually persist it to an HDF5 file in a file
-system.</i>
+system./
 </p>
 </div>
 </div>
 
-<div id="outline-container-org440e581" class="outline-3">
-<h3 id="org440e581"><span class="section-number-3">4.2</span> Outline</h3>
+<div id="outline-container-org1437f2e" class="outline-3">
+<h3 id="org1437f2e"><span class="section-number-3">4.2</span> Outline</h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 There are a few new snippets in this example. The <code>&lt;&lt;make-big-2D-dataset&gt;&gt;</code>
 block on line <a href="#coderef-big-dset" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-dset');" onmouseout="CodeHighlightOff(this, 'coderef-big-dset');">11</a> appears identical to <code>&lt;&lt;make-2D-dataset&gt;&gt;</code>, but the
-implementation in section <a href="#org84092c6">5.5</a> shows that we are dealing
+implementation in section <a href="#org69e19b8">5.5</a> shows that we are dealing
 with a datset of potentially arbitrary extent, using chunked storage layout.
 </p>
 
@@ -794,11 +799,11 @@ extent during an application's lifetime by growing and shrinking it using
 
 <p>
 On line <a href="#coderef-size-check" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-size-check');" onmouseout="CodeHighlightOff(this, 'coderef-size-check');">28</a>, we check its size once more (see section
-<a href="#org58faf16">5.6</a>). If the size doesn't exceed 60,000 bytes, we optimize its
+<a href="#org86a33db">5.6</a>). If the size doesn't exceed 60,000 bytes, we optimize its
 persisted representation by using the so-called compact storage layout (line
-<a href="#coderef-compact" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact');" onmouseout="CodeHighlightOff(this, 'coderef-compact');">31</a> and section <a href="#org94a81c2">5.7</a>). In this case we need to transfer
-the data manually (line <a href="#coderef-data-xfer" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-data-xfer');" onmouseout="CodeHighlightOff(this, 'coderef-data-xfer');">33</a> and section <a href="#orgf0b851e">5.8</a>).
-Otherwise, we fall back onto <code>H5Ocopy</code> (line <a href="#coderef-big-copy" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-copy');" onmouseout="CodeHighlightOff(this, 'coderef-big-copy');">39</a>).
+<a href="#coderef-compact" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact');" onmouseout="CodeHighlightOff(this, 'coderef-compact');">31</a> and section <a href="#orgb46619a">5.7</a>). In this case we need to transfer
+the data manually (line <a href="#coderef-data-xfer" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-data-xfer');" onmouseout="CodeHighlightOff(this, 'coderef-data-xfer');">33</a> and section <a href="#org07a75fe">5.8</a>).  Otherwise,
+we fall back onto <code>H5Ocopy</code> (line <a href="#coderef-big-copy" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-copy');" onmouseout="CodeHighlightOff(this, 'coderef-big-copy');">39</a>).
 </p>
 
 <div class="org-src-container">
@@ -809,17 +814,17 @@ Otherwise, we fall back onto <code>H5Ocopy</code> (line <a href="#coderef-big-co
 <span class="linenr"> 5: </span>{
 <span class="linenr"> 6: </span>  <span style="color: #6434A3;">int</span> <span style="color: #BA36A5;">data</span>[] = {0, 1, 2, 3, 4, 5};
 <span class="linenr"> 7: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file_d</span> = (*
-<span class="linenr"> 8: </span>                   &lt;&lt;make-disk-file&gt;&gt; ) (<span style="color: #008000;">"disk.h5"</span>);
+<span class="linenr"> 8: </span>                  &lt;&lt;make-disk-file&gt;&gt; ) (<span style="color: #008000;">"disk.h5"</span>);
 <span class="linenr"> 9: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file_m</span> = (*
-<span class="linenr">10: </span>                   &lt;&lt;make-mem-file&gt;&gt; ) (<span style="color: #008000;">"core.h5"</span>, 1024*1024, (argc &gt; 1));
+<span class="linenr">10: </span>                  &lt;&lt;make-mem-file&gt;&gt; ) (<span style="color: #008000;">"core.h5"</span>, 1024*1024, (argc &gt; 1));
 <span class="linenr">11: </span>  <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dset_m</span> = (*
-<span id="coderef-big-dset" class="coderef-off"><span class="linenr">12: </span>                   &lt;&lt;make-big-2D-dataset&gt;&gt; ) (file_m, <span style="color: #008000;">"2x3"</span>,</span>
-<span class="linenr">13: </span>                                              H5T_NATIVE_INT32,
-<span class="linenr">14: </span>                                              (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
+<span id="coderef-big-dset" class="coderef-off"><span class="linenr">12: </span>                  &lt;&lt;make-big-2D-dataset&gt;&gt; ) (file_m, <span style="color: #008000;">"2x3"</span>,</span>
+<span class="linenr">13: </span>                                             H5T_NATIVE_INT32,
+<span class="linenr">14: </span>                                             (<span style="color: #6434A3;">hsize_t</span>[]){2,3}, data);
 <span class="linenr">15: </span>  (*
-<span class="linenr">16: </span>    &lt;&lt;print-lib-version&gt;&gt; ) ();
+<span class="linenr">16: </span>   &lt;&lt;print-lib-version&gt;&gt; ) ();
 <span class="linenr">17: </span>  (*
-<span class="linenr">18: </span>    &lt;&lt;print-file-size&gt;&gt; ) (file_m);
+<span class="linenr">18: </span>   &lt;&lt;print-file-size&gt;&gt; ) (file_m);
 <span class="linenr">19: </span>
 <span class="linenr">20: </span>  { <span style="color: #8D8D84;">/* </span><span style="color: #8D8D84; font-style: italic;">UNCERTAINTY </span><span style="color: #8D8D84;">*/</span>
 <span id="coderef-uncert1" class="coderef-off"><span class="linenr">21: </span>    H5Dset_extent(dset_m, (<span style="color: #6434A3;">hsize_t</span>[]){200,300});</span>
@@ -830,25 +835,25 @@ Otherwise, we fall back onto <code>H5Ocopy</code> (line <a href="#coderef-big-co
 <span class="linenr">26: </span>  }
 <span class="linenr">27: </span>
 <span class="linenr">28: </span>  <span style="color: #0000FF;">if</span> ((*
-<span id="coderef-size-check" class="coderef-off"><span class="linenr">29: </span>        &lt;&lt;dataset-size&gt;&gt;) (dset_m) &lt; 60000)</span>
-<span class="linenr">30: </span>  {
-<span class="linenr">31: </span>     <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dset_d</span> = (*
+<span id="coderef-size-check" class="coderef-off"><span class="linenr">29: </span>       &lt;&lt;dataset-size&gt;&gt;) (dset_m) &lt; 60000)</span>
+<span class="linenr">30: </span>    {
+<span class="linenr">31: </span>      <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dset_d</span> = (*
 <span id="coderef-compact" class="coderef-off"><span class="linenr">32: </span>                      &lt;&lt;create-compact&gt;&gt; ) (dset_m, file_d, <span style="color: #008000;">"2x3copy"</span>);</span>
-<span class="linenr">33: </span>     (*
+<span class="linenr">33: </span>      (*
 <span id="coderef-data-xfer" class="coderef-off"><span class="linenr">34: </span>       &lt;&lt;xfer-data&gt;&gt; ) (dset_m, dset_d);</span>
 <span class="linenr">35: </span>
-<span class="linenr">36: </span>     H5Dclose(dset_d);
-<span class="linenr">37: </span>  }
+<span class="linenr">36: </span>      H5Dclose(dset_d);
+<span class="linenr">37: </span>    }
 <span class="linenr">38: </span>  <span style="color: #0000FF;">else</span>
-<span class="linenr">39: </span>  {
-<span id="coderef-big-copy" class="coderef-off"><span class="linenr">40: </span>    H5Ocopy(file_m, <span style="color: #008000;">"2x3"</span>, file_d, <span style="color: #008000;">"2x3copy"</span>, H5P_DEFAULT, H5P_DEFAULT);</span>
-<span class="linenr">41: </span>  }
+<span class="linenr">39: </span>    {
+<span id="coderef-big-copy" class="coderef-off"><span class="linenr">40: </span>      H5Ocopy(file_m, <span style="color: #008000;">"2x3"</span>, file_d, <span style="color: #008000;">"2x3copy"</span>, H5P_DEFAULT, H5P_DEFAULT);</span>
+<span class="linenr">41: </span>    }
 <span class="linenr">42: </span>
 <span class="linenr">43: </span>  H5Dclose(dset_m);
 <span class="linenr">44: </span>  H5Fclose(file_m);
 <span class="linenr">45: </span>
 <span class="linenr">46: </span>  (*
-<span class="linenr">47: </span>    &lt;&lt;print-file-size&gt;&gt; ) (file_d);
+<span class="linenr">47: </span>   &lt;&lt;print-file-size&gt;&gt; ) (file_d);
 <span class="linenr">48: </span>
 <span class="linenr">49: </span>  H5Fclose(file_d);
 <span class="linenr">50: </span>
@@ -867,72 +872,71 @@ File size: 2048 bytes
 </div>
 </div>
 
-<div id="outline-container-orgb4f74e3" class="outline-3">
-<h3 id="orgb4f74e3"><span class="section-number-3">4.3</span> Discussion</h3>
+<div id="outline-container-orge600ae1" class="outline-3">
+<h3 id="orge600ae1"><span class="section-number-3">4.3</span> Discussion</h3>
 <div class="outline-text-3" id="text-4-3">
 <p>
 When running the program <code>core-vfd3</code>, we are informed that, for HDF5 library
-version 1.13.0, the memory-backed HDF5 file has a size of over 4 MiB while
-the persisted file is just 2 KiB.
+version 1.13.0, the memory-backed HDF5 file has a size of over 4 MiB while the
+persisted file is just 2 KiB.
 </p>
 
 <p>
-As can be seen in section <a href="#org84092c6">5.5</a>, the chunk size chosen
-for the <code>/2x3</code> dataset is 4 MiB. Although we are writing only six 32-bit
-integer (24 bytes), a full 4 MiB chunk needs to be allocated, which explains
-the overall size for the memory-backed HDF5 file.
+As can be seen in section <a href="#org69e19b8">5.5</a>, the chunk size chosen for
+the <code>/2x3</code> dataset is 4 MiB. Although we are writing only six 32-bit integer
+(24 bytes), a full 4 MiB chunk needs to be allocated, which explains the
+overall size for the memory-backed HDF5 file.
 </p>
 
 <p>
-The compact storage layout is particularly storage- and access-efficient:
-the dataset elements are stored as part of the dataset's object header
-(metadata). This header is read whenever the dataset is opened, and the
-dataset elements "travel along for free", which means that there is no
-separate storage access necessary for subsequent read or write operations.
+The compact storage layout is particularly storage- and access-efficient: the
+dataset elements are stored as part of the dataset's object header
+(metadata). This header is read whenever the dataset is opened, and the dataset
+elements "travel along for free", which means that there is no separate storage
+access necessary for subsequent read or write operations.
 </p>
 
 <p>
 <b><b>Bottom line:</b></b> The use of memory-backed HDF5 files can lead to substantial
-storage and access performance improvements, if applications "keep their
-cool" and do not prematurely commit storage resources to HDF5 objects.
+storage and access performance improvements, if applications "keep their cool"
+and do not prematurely commit storage resources to HDF5 objects.
 </p>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org699094e" class="outline-2">
-<h2 id="org699094e"><span class="section-number-2">5</span> Building Blocks <a id="orgb845d0a"></a></h2>
+<div id="outline-container-orgf1c4d69" class="outline-2">
+<h2 id="orgf1c4d69"><span class="section-number-2">5</span> Building Blocks <a id="org4c28916"></a></h2>
 <div class="outline-text-2" id="text-5">
 </div>
-<div id="outline-container-org4af5ac0" class="outline-3">
-<h3 id="org4af5ac0"><span class="section-number-3">5.1</span> On-disk HDF5 file creation <a id="org65f92c5"></a></h3>
+<div id="outline-container-orge334ca6" class="outline-3">
+<h3 id="orge334ca6"><span class="section-number-3">5.1</span> On-disk HDF5 file creation <a id="orge21664a"></a></h3>
 <div class="outline-text-3" id="text-5-1">
 <p>
 <code>H5Fcreate</code> has four parameters, of which the first two, file name and access
-flag, are usally in the limelight. To create an on-disk HDF5 file is as easy
-as this:
+flag, are usally in the limelight. To create an on-disk HDF5 file is as easy as
+this:
 </p>
 
 <div class="org-src-container">
 <pre class="src src-C">
 <span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">hid_t</span>, (<span style="color: #0000FF;">const</span> <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">name</span>),
-  {
-    <span style="color: #0000FF;">return</span> H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  })
+       {
+         <span style="color: #0000FF;">return</span> H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+       })
 
 </pre>
 </div>
 
 <p>
 The third and the fourth parameter, a <i>file creation</i> and a <i>file access</i>
-property list (handle), unlock a few extra treats, as we will see in a
-moment.
+property list (handle), unlock a few extra treats, as we will see in a moment.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org4c691f4" class="outline-3">
-<h3 id="org4c691f4"><span class="section-number-3">5.2</span> In-memory HDF5 file creation <a id="org18fb14a"></a></h3>
+<div id="outline-container-org368893a" class="outline-3">
+<h3 id="org368893a"><span class="section-number-3">5.2</span> In-memory HDF5 file creation <a id="orgf410aa7"></a></h3>
 <div class="outline-text-3" id="text-5-2">
 <p>
 We use the fourth parameter of <code>H5Fcreate</code>, a file access property list, to do
@@ -942,88 +946,87 @@ the in-memory magic.
 <div class="org-src-container">
 <pre class="src src-C"><span class="linenr"> 1: </span>
 <span class="linenr"> 2: </span><span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">hid_t</span>, (<span style="color: #0000FF;">const</span> <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">name</span>, <span style="color: #6434A3;">size_t</span> <span style="color: #BA36A5;">increment</span>, <span style="color: #6434A3;">hbool_t</span> <span style="color: #BA36A5;">flg</span>),
-<span class="linenr"> 3: </span>  {
-<span class="linenr"> 4: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
-<span class="linenr"> 5: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">fapl</span> = H5Pcreate(H5P_FILE_ACCESS);
+<span class="linenr"> 3: </span>       {
+<span class="linenr"> 4: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
+<span class="linenr"> 5: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">fapl</span> = H5Pcreate(H5P_FILE_ACCESS);
 <span class="linenr"> 6: </span>
-<span id="coderef-fapl-core" class="coderef-off"><span class="linenr"> 7: </span>    H5Pset_fapl_core(fapl, increment, flg);</span>
+<span id="coderef-fapl-core" class="coderef-off"><span class="linenr"> 7: </span>         H5Pset_fapl_core(fapl, increment, flg);</span>
 <span class="linenr"> 8: </span>
-<span class="linenr"> 9: </span>    retval = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
-<span class="linenr">10: </span>    H5Pclose(fapl);
-<span class="linenr">11: </span>    <span style="color: #0000FF;">return</span> retval;
-<span class="linenr">12: </span>  })
+<span class="linenr"> 9: </span>         retval = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+<span class="linenr">10: </span>         H5Pclose(fapl);
+<span class="linenr">11: </span>         <span style="color: #0000FF;">return</span> retval;
+<span class="linenr">12: </span>       })
 <span class="linenr">13: </span>
 </pre>
 </div>
 
 <p>
-That's right, a suitably initialized property list (line <a href="#coderef-fapl-core" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-fapl-core');" onmouseout="CodeHighlightOff(this, 'coderef-fapl-core');">6</a>) makes
-all the difference. This is in fact the ONLY difference between an
-application using regular vs. memory-backed HDF5 files.
+That's right, a suitably initialized property list (line <a href="#coderef-fapl-core" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-fapl-core');" onmouseout="CodeHighlightOff(this, 'coderef-fapl-core');">6</a>) makes all
+the difference. This is in fact the ONLY difference between an application
+using regular vs. memory-backed HDF5 files.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org8c6def8" class="outline-3">
-<h3 id="org8c6def8"><span class="section-number-3">5.3</span> Dataset creation <a id="org4ace2ec"></a></h3>
+<div id="outline-container-org5dc404e" class="outline-3">
+<h3 id="org5dc404e"><span class="section-number-3">5.3</span> Dataset creation <a id="org5f261c0"></a></h3>
 <div class="outline-text-3" id="text-5-3">
 <p>
 To create a dataset, we must specify a <code>name</code>, its element type <code>dtype</code>, its
 shape <code>dims</code>, and, optionally, an inital value <code>buffer</code>. Without additional
 customization, the default dataset storage layout is <code>H5D_CONTIGUOUS</code>, i.e.,
-the (fixed-size) dataset elements are layed out in a contigous (memory
-or storage) region.
+the (fixed-size) dataset elements are layed out in a contigous (memory or
+storage) region.
 </p>
 
 <div class="org-src-container">
 <pre class="src src-C"><span class="linenr"> 1: </span>
 <span class="linenr"> 2: </span><span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">hid_t</span>,
 <span class="linenr"> 3: </span>       (<span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file</span>, <span style="color: #0000FF;">const</span> <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">name</span>, <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dtype</span>, <span style="color: #0000FF;">const</span> <span style="color: #6434A3;">hsize_t</span>* <span style="color: #BA36A5;">dims</span>, <span style="color: #6434A3;">void</span>* <span style="color: #BA36A5;">b</span><span style="color: #BA36A5; background-color: #ff0000;">u</span><span style="color: #BA36A5;">ffer</span>),
-<span class="linenr"> 4: </span>  {
-<span class="linenr"> 5: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
-<span class="linenr"> 6: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Screate_simple(2, dims, <span style="color: #D0372D;">NULL</span>);
+<span class="linenr"> 4: </span>       {
+<span class="linenr"> 5: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
+<span class="linenr"> 6: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Screate_simple(2, dims, <span style="color: #D0372D;">NULL</span>);
 <span class="linenr"> 7: </span>
-<span id="coderef-dset-dtype1" class="coderef-off"><span class="linenr"> 8: </span>    retval = H5Dcreate(file, name, dtype, dspace,</span>
-<span class="linenr"> 9: </span>                       H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+<span id="coderef-dset-dtype1" class="coderef-off"><span class="linenr"> 8: </span>         retval = H5Dcreate(file, name, dtype, dspace,</span>
+<span class="linenr"> 9: </span>                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 <span class="linenr">10: </span>
-<span class="linenr">11: </span>    <span style="color: #0000FF;">if</span> (buffer)
-<span id="coderef-dset-dtype2" class="coderef-off"><span class="linenr">12: </span>      H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
+<span class="linenr">11: </span>         <span style="color: #0000FF;">if</span> (buffer)
+<span id="coderef-dset-dtype2" class="coderef-off"><span class="linenr">12: </span>           H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
 <span class="linenr">13: </span>
-<span class="linenr">14: </span>    H5Sclose(dspace);
-<span class="linenr">15: </span>    <span style="color: #0000FF;">return</span> retval;
-<span class="linenr">16: </span>  })
+<span class="linenr">14: </span>         H5Sclose(dspace);
+<span class="linenr">15: </span>         <span style="color: #0000FF;">return</span> retval;
+<span class="linenr">16: </span>       })
 <span class="linenr">17: </span>
 </pre>
 </div>
 
 <p>
 <b><b>WARNING:</b></b> This snippet contains an <i>important assumption</i> that may not be
-obvious to many readers: The datatype handle <code>dtype</code> is used in two places
-with different interpretations. In the first instance, line <a href="#coderef-dset-dtype1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-dset-dtype1');" onmouseout="CodeHighlightOff(this, 'coderef-dset-dtype1');">7</a>,
-it refers to the in-file element type of the dataset to be created. In the
-second instance, line <a href="#coderef-dset-dtype2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-dset-dtype2');" onmouseout="CodeHighlightOff(this, 'coderef-dset-dtype2');">11</a>, it refers to the datatype of the
-elements in <code>buffer</code>. The assumption is that the two are the same. While this
-assumption is valid in many practical examples, it can lead to subtle errors
-if its violation goes undetected. In a production code, this should be
-either documented and enforced, or an additional datatype argument be passed
-to distinguish them.
+obvious to many readers: The datatype handle <code>dtype</code> is used in two places with
+different interpretations. In the first instance, line <a href="#coderef-dset-dtype1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-dset-dtype1');" onmouseout="CodeHighlightOff(this, 'coderef-dset-dtype1');">7</a>, it refers
+to the in-file element type of the dataset to be created. In the second
+instance, line <a href="#coderef-dset-dtype2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-dset-dtype2');" onmouseout="CodeHighlightOff(this, 'coderef-dset-dtype2');">11</a>, it refers to the datatype of the elements in
+<code>buffer</code>. The assumption is that the two are the same. While this assumption is
+valid in many practical examples, it can lead to subtle errors if its violation
+goes undetected. In a production code, this should be either documented and
+enforced, or an additional datatype argument be passed to distinguish them.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org48f3084" class="outline-3">
-<h3 id="org48f3084"><span class="section-number-3">5.4</span> Print library and file info</h3>
+<div id="outline-container-org734c661" class="outline-3">
+<h3 id="org734c661"><span class="section-number-3">5.4</span> Print library and file info</h3>
 <div class="outline-text-3" id="text-5-4">
 <div class="org-src-container">
 <pre class="src src-C">
 <span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">void</span>, (<span style="color: #6434A3;">void</span>),
-  {
-    <span style="color: #6434A3;">unsigned</span> <span style="color: #BA36A5;">majnum</span>;
-    <span style="color: #6434A3;">unsigned</span> <span style="color: #BA36A5;">minnum</span>;
-    <span style="color: #6434A3;">unsigned</span> <span style="color: #BA36A5;">relnum</span>;
-    H5get_libversion(&amp;majnum, &amp;minnum, &amp;relnum);
-    printf(<span style="color: #008000;">"HDF5 library version %d.%d.%d\n"</span>, majnum, minnum, relnum);
-  })
+       {
+         <span style="color: #6434A3;">unsigned</span> <span style="color: #BA36A5;">majnum</span>;
+         <span style="color: #6434A3;">unsigned</span> <span style="color: #BA36A5;">minnum</span>;
+         <span style="color: #6434A3;">unsigned</span> <span style="color: #BA36A5;">relnum</span>;
+         H5get_libversion(&amp;majnum, &amp;minnum, &amp;relnum);
+         printf(<span style="color: #008000;">"HDF5 library version %d.%d.%d\n"</span>, majnum, minnum, relnum);
+       })
 
 </pre>
 </div>
@@ -1031,139 +1034,139 @@ to distinguish them.
 <div class="org-src-container">
 <pre class="src src-C">
 <span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">void</span>, (<span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file</span>),
-  {
-    <span style="color: #6434A3;">hsize_t</span> <span style="color: #BA36A5;">size</span>;
-    H5Fget_filesize(file, &amp;size);
-    printf(<span style="color: #008000;">"File size: %ld bytes\n"</span>, size);
-  })
+       {
+         <span style="color: #6434A3;">hsize_t</span> <span style="color: #BA36A5;">size</span>;
+         H5Fget_filesize(file, &amp;size);
+         printf(<span style="color: #008000;">"File size: %ld bytes\n"</span>, size);
+       })
 
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org98fa3e3" class="outline-3">
-<h3 id="org98fa3e3"><span class="section-number-3">5.5</span> Big dataset creation <a id="org84092c6"></a></h3>
+<div id="outline-container-orgbe35d3c" class="outline-3">
+<h3 id="orgbe35d3c"><span class="section-number-3">5.5</span> Big dataset creation <a id="org69e19b8"></a></h3>
 <div class="outline-text-3" id="text-5-5">
 <p>
 This <code>lambda</code> returns a handle to the potentially large dataset in the
 memory-backed HDF5 file. Since the dataset's final size will only be known
 eventually (e.g., end of epoch or transaction), we can't impose a finite
-maximum extent. On line <a href="#coderef-big-sky" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-sky');" onmouseout="CodeHighlightOff(this, 'coderef-big-sky');">6</a>, we set the maxmimum extent as unlimited
-in all (2) dimensions. Currently, the only HDF5 storage layout that supports
-such an arrangement is <i>chunked storage layout</i>. By passing a non-default
-dataset creation property list <code>dcpl</code> to <code>H5Dcreate</code> (line <a href="#coderef-big-dcpl" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-dcpl');" onmouseout="CodeHighlightOff(this, 'coderef-big-dcpl');">11</a>), we
-instruct the HDF5 library to use chunked storage layout instead of the
-default contiguous layout. For chunked layout, we must specify the size of
-an individual chunk in terms of <i>dataset elements per chunk</i>; see line
-<a href="#coderef-big-chunk" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-chunk');" onmouseout="CodeHighlightOff(this, 'coderef-big-chunk');">9</a>. The size of a chunk in bytes depends on the element datatype.
-In our example (32-bit integers), a 1024<sup>2</sup> chunk occupies 4 MiB of memory
-or storage.
+maximum extent. On line <a href="#coderef-big-sky" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-sky');" onmouseout="CodeHighlightOff(this, 'coderef-big-sky');">6</a>, we set the maxmimum extent as unlimited in
+all (2) dimensions. Currently, the only HDF5 storage layout that supports such
+an arrangement is <i>chunked storage layout</i>. By passing a non-default dataset
+creation property list <code>dcpl</code> to <code>H5Dcreate</code> (line <a href="#coderef-big-dcpl" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-dcpl');" onmouseout="CodeHighlightOff(this, 'coderef-big-dcpl');">11</a>), we instruct the
+HDF5 library to use chunked storage layout instead of the default contiguous
+layout. For chunked layout, we must specify the size of an individual chunk in
+terms of <i>dataset elements per chunk</i>; see line <a href="#coderef-big-chunk" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-big-chunk');" onmouseout="CodeHighlightOff(this, 'coderef-big-chunk');">9</a>. The size of a
+chunk in bytes depends on the element datatype.  In our example (32-bit
+integers), a 1024<sup>2</sup> chunk occupies 4 MiB of memory or storage.
 </p>
 
 <div class="org-src-container">
 <pre class="src src-C"><span class="linenr"> 1: </span>
 <span class="linenr"> 2: </span><span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">hid_t</span>,
-<span class="linenr"> 3: </span>  (<span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file</span>, <span style="color: #0000FF;">const</span> <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">name</span>, <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dtype</span>, <span style="color: #0000FF;">const</span> <span style="color: #6434A3;">hsize_t</span>* <span style="color: #BA36A5;">dims</span>, <span style="color: #6434A3;">void</span>* <span style="color: #BA36A5;">buffer</span><span style="background-color: #ff0000;">)</span>,
-<span class="linenr"> 4: </span>  {
-<span class="linenr"> 5: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
-<span class="linenr"> 6: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Screate_simple(2, dims,
-<span id="coderef-big-sky" class="coderef-off"><span class="linenr"> 7: </span>                                    (<span style="color: #6434A3;">hsize_t</span>[]){H5S_UNLIMITED, H5S_UNLIMITED});</span>
-<span class="linenr"> 8: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dcpl</span> = H5Pcreate(H5P_DATASET_CREATE);
+<span class="linenr"> 3: </span>       (<span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file</span>, <span style="color: #0000FF;">const</span> <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">name</span>, <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dtype</span>, <span style="color: #0000FF;">const</span> <span style="color: #6434A3;">hsize_t</span>* <span style="color: #BA36A5;">dims</span>, <span style="color: #6434A3;">void</span>* <span style="color: #BA36A5;">b</span><span style="color: #BA36A5; background-color: #ff0000;">u</span><span style="color: #BA36A5;">ffer</span>),
+<span class="linenr"> 4: </span>       {
+<span class="linenr"> 5: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
+<span class="linenr"> 6: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Screate_simple(2, dims,
+<span id="coderef-big-sky" class="coderef-off"><span class="linenr"> 7: </span>                                         (<span style="color: #6434A3;">hsize_t</span>[]){H5S_UNLIMITED, H5S_UNLIMIT<span style="background-color: #ff0000;">E</span>D});</span>
+<span class="linenr"> 8: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dcpl</span> = H5Pcreate(H5P_DATASET_CREATE);
 <span class="linenr"> 9: </span>
-<span id="coderef-big-chunk" class="coderef-off"><span class="linenr">10: </span>    H5Pset_chunk(dcpl, 2, (<span style="color: #6434A3;">hsize_t</span>[]){1024, 1024});</span>
-<span id="coderef-big-dtype1" class="coderef-off"><span class="linenr">11: </span>    retval = H5Dcreate(file, name, dtype, dspace,</span>
-<span id="coderef-big-dcpl" class="coderef-off"><span class="linenr">12: </span>                       H5P_DEFAULT, dcpl, H5P_DEFAULT);</span>
+<span id="coderef-big-chunk" class="coderef-off"><span class="linenr">10: </span>         H5Pset_chunk(dcpl, 2, (<span style="color: #6434A3;">hsize_t</span>[]){1024, 1024});</span>
+<span id="coderef-big-dtype1" class="coderef-off"><span class="linenr">11: </span>         retval = H5Dcreate(file, name, dtype, dspace,</span>
+<span id="coderef-big-dcpl" class="coderef-off"><span class="linenr">12: </span>                            H5P_DEFAULT, dcpl, H5P_DEFAULT);</span>
 <span class="linenr">13: </span>
-<span class="linenr">14: </span>    <span style="color: #0000FF;">if</span> (buffer)
-<span id="coderef-big-dtype2" class="coderef-off"><span class="linenr">15: </span>      H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
+<span class="linenr">14: </span>         <span style="color: #0000FF;">if</span> (buffer)
+<span id="coderef-big-dtype2" class="coderef-off"><span class="linenr">15: </span>           H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
 <span class="linenr">16: </span>
-<span class="linenr">17: </span>    H5Pclose(dcpl);
-<span class="linenr">18: </span>    H5Sclose(dspace);
-<span class="linenr">19: </span>    <span style="color: #0000FF;">return</span> retval;
-<span class="linenr">20: </span>  })
+<span class="linenr">17: </span>         H5Pclose(dcpl);
+<span class="linenr">18: </span>         H5Sclose(dspace);
+<span class="linenr">19: </span>         <span style="color: #0000FF;">return</span> retval;
+<span class="linenr">20: </span>       })
 <span class="linenr">21: </span>
 </pre>
 </div>
 
 <p>
 The same warning and assumptions expressed at the end of section
-<a href="#org4ace2ec">5.3</a> apply to <code>dtype</code>.
+<a href="#org5f261c0">5.3</a> apply to <code>dtype</code>.
 </p>
 </div>
 </div>
 
-<div id="outline-container-org85dacd0" class="outline-3">
-<h3 id="org85dacd0"><span class="section-number-3">5.6</span> Dataset size <a id="org58faf16"></a></h3>
+<div id="outline-container-orge326dd2" class="outline-3">
+<h3 id="orge326dd2"><span class="section-number-3">5.6</span> Dataset size <a id="org86a33db"></a></h3>
 <div class="outline-text-3" id="text-5-6">
 <p>
 This <code>lambda</code> returns the size (in bytes) of the source dataset in the
-memory-backed HDF5 file. It's a matter of determining the storage size
-of an individual dataset element and counting how many there are
-(lines <a href="#coderef-size-calc1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-size-calc1');" onmouseout="CodeHighlightOff(this, 'coderef-size-calc1');">7</a>, <a href="#coderef-size-calc2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-size-calc2');" onmouseout="CodeHighlightOff(this, 'coderef-size-calc2');">8</a>)
+memory-backed HDF5 file. It's a matter of determining the storage size of an
+individual dataset element and counting how many there are (lines <a href="#coderef-size-calc1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-size-calc1');" onmouseout="CodeHighlightOff(this, 'coderef-size-calc1');">7</a>,
+<a href="#coderef-size-calc2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-size-calc2');" onmouseout="CodeHighlightOff(this, 'coderef-size-calc2');">8</a>)
 </p>
 
 <div class="org-src-container">
 <pre class="src src-C"><span class="linenr"> 1: </span>
 <span class="linenr"> 2: </span><span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">hid_t</span>, (<span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dset</span>),
-<span class="linenr"> 3: </span>  {
-<span class="linenr"> 4: </span>    <span style="color: #6434A3;">size_t</span> <span style="color: #BA36A5;">retval</span>;
-<span class="linenr"> 5: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">ftype</span> = H5Dget_type(dset);
-<span class="linenr"> 6: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Dget_space(dset);
+<span class="linenr"> 3: </span>       {
+<span class="linenr"> 4: </span>         <span style="color: #6434A3;">size_t</span> <span style="color: #BA36A5;">retval</span>;
+<span class="linenr"> 5: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">ftype</span> = H5Dget_type(dset);
+<span class="linenr"> 6: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Dget_space(dset);
 <span class="linenr"> 7: </span>
-<span id="coderef-size-calc1" class="coderef-off"><span class="linenr"> 8: </span>    retval = H5Tget_size(ftype) *</span>
-<span id="coderef-size-calc2" class="coderef-off"><span class="linenr"> 9: </span>               (<span style="color: #6434A3;">size_t</span>) H5Sget_simple_extent_npoints(dspace);</span>
+<span id="coderef-size-calc1" class="coderef-off"><span class="linenr"> 8: </span>         retval = H5Tget_size(ftype) *</span>
+<span id="coderef-size-calc2" class="coderef-off"><span class="linenr"> 9: </span>           (<span style="color: #6434A3;">size_t</span>) H5Sget_simple_extent_npoints(dspace);</span>
 <span class="linenr">10: </span>
-<span class="linenr">11: </span>    H5Sclose(dspace);
-<span class="linenr">12: </span>    H5Tclose(ftype);
-<span class="linenr">13: </span>    <span style="color: #0000FF;">return</span> retval;
-<span class="linenr">14: </span>  })
+<span class="linenr">11: </span>         H5Sclose(dspace);
+<span class="linenr">12: </span>         H5Tclose(ftype);
+<span class="linenr">13: </span>         <span style="color: #0000FF;">return</span> retval;
+<span class="linenr">14: </span>       })
 <span class="linenr">15: </span>
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orgc850a4c" class="outline-3">
-<h3 id="orgc850a4c"><span class="section-number-3">5.7</span> Compact replica <a id="org94a81c2"></a></h3>
+<div id="outline-container-org35417b7" class="outline-3">
+<h3 id="org35417b7"><span class="section-number-3">5.7</span> Compact replica <a id="orgb46619a"></a></h3>
 <div class="outline-text-3" id="text-5-7">
 <p>
-This <code>lambda</code> returns a handle to the freshly minted compact replica of
-the source dataset. (It's a placeholder, because the actual values are
-transferred separately.)
+This <code>lambda</code> returns a handle to the freshly minted compact replica of the
+source dataset. (It's a placeholder, because the actual values are transferred
+separately.)
 </p>
 
 <p>
 What sets this dataset creation apart from the default case occurs on lines
 <a href="#coderef-compact-layout" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact-layout');" onmouseout="CodeHighlightOff(this, 'coderef-compact-layout');">14</a>-<a href="#coderef-compact-dcpl" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact-dcpl');" onmouseout="CodeHighlightOff(this, 'coderef-compact-dcpl');">16</a>. By passing a non-default dataset creation
-property list <code>dcpl</code> to <code>H5Dcreate</code>, we instruct the HDF5 library to use compact
-storage layout instead of the default contiguous (<code>H5D_CONTIGUOUS</code>) layout.
+property list <code>dcpl</code> to <code>H5Dcreate</code>, we instruct the HDF5 library to use
+compact storage layout instead of the default contiguous (<code>H5D_CONTIGUOUS</code>)
+layout.
 </p>
 
 <div class="org-src-container">
 <pre class="src src-C"><span class="linenr"> 1: </span>
 <span class="linenr"> 2: </span><span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">hid_t</span>, (<span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">src_dset</span>, <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">file</span>, <span style="color: #0000FF;">const</span> <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">name</span>),
-<span class="linenr"> 3: </span>  {
-<span class="linenr"> 4: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
-<span class="linenr"> 5: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">ftype</span> = H5Dget_type(src_dset);
-<span id="coderef-compact-src" class="coderef-off"><span class="linenr"> 6: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">src_dspace</span> = H5Dget_space(src_dset);</span>
-<span class="linenr"> 7: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dcpl</span> = H5Pcreate(H5P_DATASET_CREATE);
+<span class="linenr"> 3: </span>       {
+<span class="linenr"> 4: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">retval</span>;
+<span class="linenr"> 5: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">ftype</span> = H5Dget_type(src_dset);
+<span id="coderef-compact-src" class="coderef-off"><span class="linenr"> 6: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">src_dspace</span> = H5Dget_space(src_dset);</span>
+<span class="linenr"> 7: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dcpl</span> = H5Pcreate(H5P_DATASET_CREATE);
 <span class="linenr"> 8: </span>
-<span id="coderef-compact1" class="coderef-off"><span class="linenr"> 9: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Scopy(src_dspace);</span>
-<span id="coderef-compact-max-rank" class="coderef-off"><span class="linenr">10: </span>    <span style="color: #6434A3;">hsize_t</span> <span style="color: #BA36A5;">dims</span>[H5S_MAX_RANK];</span>
-<span class="linenr">11: </span>    H5Sget_simple_extent_dims(dspace, dims, <span style="color: #D0372D;">NULL</span>);
-<span class="linenr">12: </span>    H5Sset_extent_simple(dspace, <span style="color: #6434A3;">H5Sget_simple_extent_ndims</span>(<span style="color: #BA36A5;">dspace</span>),
-<span id="coderef-compact2" class="coderef-off"><span class="linenr">13: </span>                         dims, <span style="color: #D0372D;">NULL</span>);</span>
+<span id="coderef-compact1" class="coderef-off"><span class="linenr"> 9: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Scopy(src_dspace);</span>
+<span id="coderef-compact-max-rank" class="coderef-off"><span class="linenr">10: </span>         <span style="color: #6434A3;">hsize_t</span> <span style="color: #BA36A5;">dims</span>[H5S_MAX_RANK];</span>
+<span class="linenr">11: </span>         H5Sget_simple_extent_dims(dspace, dims, <span style="color: #D0372D;">NULL</span>);
+<span class="linenr">12: </span>         H5Sset_extent_simple(dspace, <span style="color: #6434A3;">H5Sget_simple_extent_ndims</span>(<span style="color: #BA36A5;">dspace</span>),
+<span id="coderef-compact2" class="coderef-off"><span class="linenr">13: </span>                              dims, <span style="color: #D0372D;">NULL</span>);</span>
 <span class="linenr">14: </span>
-<span id="coderef-compact-layout" class="coderef-off"><span class="linenr">15: </span>    H5Pset_layout(dcpl, H5D_COMPACT);</span>
-<span class="linenr">16: </span>    retval = H5Dcreate(file, name, ftype, dspace,
-<span id="coderef-compact-dcpl" class="coderef-off"><span class="linenr">17: </span>                       H5P_DEFAULT, dcpl, H5P_DEFAULT);</span>
+<span id="coderef-compact-layout" class="coderef-off"><span class="linenr">15: </span>         H5Pset_layout(dcpl, H5D_COMPACT);</span>
+<span class="linenr">16: </span>         retval = H5Dcreate(file, name, ftype, dspace,
+<span id="coderef-compact-dcpl" class="coderef-off"><span class="linenr">17: </span>                            H5P_DEFAULT, dcpl, H5P_DEFAULT);</span>
 <span class="linenr">18: </span>
-<span class="linenr">19: </span>    H5Pclose(dcpl);
-<span class="linenr">20: </span>    H5Sclose(dspace);
-<span class="linenr">21: </span>    H5Tclose(ftype);
-<span class="linenr">22: </span>    <span style="color: #0000FF;">return</span> retval;
-<span class="linenr">23: </span>  })
+<span class="linenr">19: </span>         H5Pclose(dcpl);
+<span class="linenr">20: </span>         H5Sclose(dspace);
+<span class="linenr">21: </span>         H5Tclose(ftype);
+<span class="linenr">22: </span>         <span style="color: #0000FF;">return</span> retval;
+<span class="linenr">23: </span>       })
 <span class="linenr">24: </span>
 </pre>
 </div>
@@ -1173,52 +1176,52 @@ Two other things are worth mentioning about this snippet.
 </p>
 
 <ol class="org-ol">
-<li>The dataspace construction on lines <a href="#coderef-compact1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact1');" onmouseout="CodeHighlightOff(this, 'coderef-compact1');">8</a>-<a href="#coderef-compact2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact2');" onmouseout="CodeHighlightOff(this, 'coderef-compact2');">12</a> appears a
-little clumsy. Since the extent of the source dataset <code>src_dset</code> is not
-changing, why not just work with <code>src_dspace</code> (line <a href="#coderef-compact-src" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact-src');" onmouseout="CodeHighlightOff(this, 'coderef-compact-src');">5</a>)? The
-reason is that dataspaces with <code>H5S_UNLIMITED</code> extent bounds, for obvious
-reasons, are not supported with compact layout. In that case, in our
-example (!), passing <code>src_dspace</code> as an argument to <code>H5Dcreate</code> would
-generate an error. It's easier to just create a copy of the dataspace and
-"kill" (<code>NULL</code>) whatever maximum extent there might be.</li>
-<li>On line <a href="#coderef-compact-max-rank" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact-max-rank');" onmouseout="CodeHighlightOff(this, 'coderef-compact-max-rank');">9</a>, we use the HDF5 library macro
-<code>H5S_MAX_RANK</code> to avoid the dynamic allocation of the <code>dims</code> array.</li>
+<li>The dataspace construction on lines <a href="#coderef-compact1" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact1');" onmouseout="CodeHighlightOff(this, 'coderef-compact1');">8</a>-<a href="#coderef-compact2" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact2');" onmouseout="CodeHighlightOff(this, 'coderef-compact2');">12</a> appears a little
+clumsy. Since the extent of the source dataset <code>src_dset</code> is not changing,
+why not just work with <code>src_dspace</code> (line <a href="#coderef-compact-src" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact-src');" onmouseout="CodeHighlightOff(this, 'coderef-compact-src');">5</a>)? The reason is that
+dataspaces with <code>H5S_UNLIMITED</code> extent bounds, for obvious reasons, are not
+supported with compact layout. In that case, in our example (!), passing
+<code>src_dspace</code> as an argument to <code>H5Dcreate</code> would generate an error. It's
+easier to just create a copy of the dataspace and "kill" (<code>NULL</code>) whatever
+maximum extent there might be.</li>
+<li>On line <a href="#coderef-compact-max-rank" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-compact-max-rank');" onmouseout="CodeHighlightOff(this, 'coderef-compact-max-rank');">9</a>, we use the HDF5 library macro <code>H5S_MAX_RANK</code> to
+avoid the dynamic allocation of the <code>dims</code> array.</li>
 </ol>
 </div>
 </div>
 
-<div id="outline-container-org4c4b344" class="outline-3">
-<h3 id="org4c4b344"><span class="section-number-3">5.8</span> Data transfer <a id="orgf0b851e"></a></h3>
+<div id="outline-container-orge16b956" class="outline-3">
+<h3 id="orge16b956"><span class="section-number-3">5.8</span> Data transfer <a id="org07a75fe"></a></h3>
 <div class="outline-text-3" id="text-5-8">
 <p>
-The HDF5 library does not currently have a function to "automagically"
-transfer data between two datasets, especially datasets with different
-storage layouts. There is not much else we can do but to read (line
-<a href="#coderef-xfer-read" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-xfer-read');" onmouseout="CodeHighlightOff(this, 'coderef-xfer-read');">8</a>) the data from the source dataset and to write (line
-<a href="#coderef-xfer-write" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-xfer-write');" onmouseout="CodeHighlightOff(this, 'coderef-xfer-write');">9</a>) to the destination dataset.
+The HDF5 library does not currently have a function to "automagically" transfer
+data between two datasets, especially datasets with different storage
+layouts. There is not much else we can do but to read (line <a href="#coderef-xfer-read" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-xfer-read');" onmouseout="CodeHighlightOff(this, 'coderef-xfer-read');">8</a>) the
+data from the source dataset and to write (line <a href="#coderef-xfer-write" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-xfer-write');" onmouseout="CodeHighlightOff(this, 'coderef-xfer-write');">9</a>) to the
+destination dataset.
 </p>
 
 <p>
-Since we transfer the data through memory, we need to determine first the
-size of the transfer buffer needed (line <a href="#coderef-xfer-size" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-xfer-size');" onmouseout="CodeHighlightOff(this, 'coderef-xfer-size');">5</a>).
+Since we transfer the data through memory, we need to determine first the size
+of the transfer buffer needed (line <a href="#coderef-xfer-size" class="coderef" onmouseover="CodeHighlightOn(this, 'coderef-xfer-size');" onmouseout="CodeHighlightOff(this, 'coderef-xfer-size');">5</a>).
 </p>
 
 <div class="org-src-container">
 <pre class="src src-C"><span class="linenr"> 1: </span>
 <span class="linenr"> 2: </span><span style="color: #006699;">lambda</span>(<span style="color: #6434A3;">void</span>, (<span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">src</span>, <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dst</span>),
-<span class="linenr"> 3: </span>  {
-<span class="linenr"> 4: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">ftype</span> = H5Dget_type(src);
-<span class="linenr"> 5: </span>    <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Dget_space(src);
-<span id="coderef-xfer-size" class="coderef-off"><span class="linenr"> 6: </span>    <span style="color: #6434A3;">size_t</span> <span style="color: #BA36A5;">size</span> = H5Tget_size(ftype) * H5Sget_simple_extent_npoints(dspace);</span>
-<span class="linenr"> 7: </span>    <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">buffer</span> = (<span style="color: #6434A3;">char</span>*) malloc(size);
+<span class="linenr"> 3: </span>       {
+<span class="linenr"> 4: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">ftype</span> = H5Dget_type(src);
+<span class="linenr"> 5: </span>         <span style="color: #6434A3;">hid_t</span> <span style="color: #BA36A5;">dspace</span> = H5Dget_space(src);
+<span id="coderef-xfer-size" class="coderef-off"><span class="linenr"> 6: </span>         <span style="color: #6434A3;">size_t</span> <span style="color: #BA36A5;">size</span> = H5Tget_size(ftype) * H5Sget_simple_extent_npoints(dspace<span style="background-color: #ff0000;">)</span>;</span>
+<span class="linenr"> 7: </span>         <span style="color: #6434A3;">char</span>* <span style="color: #BA36A5;">buffer</span> = (<span style="color: #6434A3;">char</span>*) malloc(size);
 <span class="linenr"> 8: </span>
-<span id="coderef-xfer-read" class="coderef-off"><span class="linenr"> 9: </span>    H5Dread(src, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
-<span id="coderef-xfer-write" class="coderef-off"><span class="linenr">10: </span>    H5Dwrite(dst, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
+<span id="coderef-xfer-read" class="coderef-off"><span class="linenr"> 9: </span>         H5Dread(src, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
+<span id="coderef-xfer-write" class="coderef-off"><span class="linenr">10: </span>         H5Dwrite(dst, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);</span>
 <span class="linenr">11: </span>
-<span class="linenr">12: </span>    free(buffer);
-<span class="linenr">13: </span>    H5Sclose(dspace);
-<span class="linenr">14: </span>    H5Tclose(ftype);
-<span class="linenr">15: </span>  })
+<span class="linenr">12: </span>         free(buffer);
+<span class="linenr">13: </span>         H5Sclose(dspace);
+<span class="linenr">14: </span>         H5Tclose(ftype);
+<span class="linenr">15: </span>       })
 <span class="linenr">16: </span>
 </pre>
 </div>
@@ -1226,12 +1229,12 @@ size of the transfer buffer needed (line <a href="#coderef-xfer-size" class="cod
 </div>
 </div>
 
-<div id="outline-container-org73e53dc" class="outline-2">
-<h2 id="org73e53dc"><span class="section-number-2">6</span> Appendix</h2>
+<div id="outline-container-org0812f2a" class="outline-2">
+<h2 id="org0812f2a"><span class="section-number-2">6</span> Appendix</h2>
 <div class="outline-text-2" id="text-6">
 </div>
-<div id="outline-container-org0d63760" class="outline-3">
-<h3 id="org0d63760"><span class="section-number-3">6.1</span> Versions</h3>
+<div id="outline-container-orgf71a32e" class="outline-3">
+<h3 id="orgf71a32e"><span class="section-number-3">6.1</span> Versions</h3>
 <div class="outline-text-3" id="text-6-1">
 <p>
 This document was tested with the following software versions:
@@ -1273,8 +1276,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 </div>
 </div>
 
-<div id="outline-container-orgc94cd15" class="outline-3">
-<h3 id="orgc94cd15"><span class="section-number-3">6.2</span> Boilerplate with a twist</h3>
+<div id="outline-container-orgc6a721b" class="outline-3">
+<h3 id="orgc6a721b"><span class="section-number-3">6.2</span> Boilerplate with a twist</h3>
 <div class="outline-text-3" id="text-6-2">
 <p>
 These are the header files needed to build the examples.
@@ -1308,9 +1311,8 @@ The more interesting bit is the <code>lambda</code> macro by <a href="https://ha
 
 <p>
 It uses two features of GNU C (<code>--std=gnu99</code>), namely, <a href="http://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html">nested functions</a> and
-<a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">statement expressions</a>, which lets us wrap C code blocks as "lambda
-functions", thereby making longer pieces of code easier to follow and
-digest.
+<a href="https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html">statement expressions</a>, which lets us wrap C code blocks as "lambda functions",
+thereby making longer pieces of code easier to follow and digest.
 </p>
 
 <pre class="example">
@@ -1352,7 +1354,7 @@ Such a <code>lambda</code> can then be invoked like a C-function pointer:
 <div id="postamble" class="status">
 <p class="date">Date: 17 December 2020</p>
 <p class="author">Author: Gerd Heber</p>
-<p class="date">Created: 2020-12-27 Sun 08:39</p>
+<p class="date">Created: 2020-12-27 Sun 16:09</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

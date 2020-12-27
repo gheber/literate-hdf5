@@ -1,4 +1,4 @@
-% Created 2020-12-27 Sun 08:40
+% Created 2020-12-27 Sun 16:10
 % Intended LaTeX compiler: xelatex
 \documentclass[a4paper, 12pt]{article}
 \usepackage{graphicx}
@@ -30,7 +30,7 @@
 
 
 \section{Introduction}
-\label{sec:org2438f7c}
+\label{sec:org0eadc57}
 
 Logically, an HDF5 file stored in a file system is just a sequence of bytes
 formatted according to the HDF5 file format specification. Several factors
@@ -48,7 +48,6 @@ memory buffers.)
 \item For the lifetime of the application perform HDF5 I/O operations as usual.
 \item Before application shutdown decide whether to abandon the RAM buffer or to
 persist certain parts of it in an HDF5 file in a file system.
-\end{enumerate}
 
 The obvious use case for in-memory HDF5 files is their use as \emph{I/O buffers},
 for example, in applications with large numbers of small-size and
@@ -65,13 +64,14 @@ driver (VFD).  This is, however, not the place to learn about implementation
 details. See ??? for that.
 
 This document is organized as follows: First, we present three examples
-(sections \ref{orged3315b}, \ref{orga6e6d24}, \ref{orgca09e6b}) with
+(sections \ref{org27287be}, \ref{org0178d17}, \ref{org430fa7f}) with
 their code outlines and their actual behavior. In section
-\ref{orga1e6e52}, we show the implementation of their (common) building
+\ref{org877f7e6}, we show the implementation of their (common) building
 blocks.
+\end{enumerate}
 
 \subsection{Caveat Emptor}
-\label{sec:orgae5f3c1}
+\label{sec:org201f89f}
 
 The examples in this document are developed by incremental refinement. They
 are written in C in a style that we call \emph{literate HDF5}. (See \href{https://en.wikipedia.org/wiki/Literate\_programming}{Knuth1992}.)
@@ -90,7 +90,7 @@ handling was attempted, and attentive readers will easily identify several
 corner cases that were not considered.
 
 \subsection{Syntax}
-\label{sec:org6c17268}
+\label{sec:orgbb0cf18}
 
 The basic syntactic element to denote a code block with a deferred
 implementation follows this pattern:
@@ -107,7 +107,7 @@ it convenient to think about these blocks as such. (If the examples were
 written in C++, that would be one way to go about it.)
 
 \subsection{Logistics}
-\label{sec:orge4caebf}
+\label{sec:orgd6e565b}
 
 There are several ways to run the examples contained in this document.
 
@@ -149,8 +149,8 @@ The code can then be compiled with \texttt{gcc -{}-std=gnu99 ...} and the
 appropriate include and library paths for HDF5.
 \end{enumerate}
 
-\section{Basic Use  \label{orged3315b}}
-\label{sec:orga642e79}
+\section{Basic Use  \label{org27287be}}
+\label{sec:orga1e56f2}
 
 The HDF5 library supports an in-memory, aka. in-\emph{core}, representation of HDF5
 files, which should not to be confused with \href{https://en.wikipedia.org/wiki/Memory-mapped\_file}{memory-mapped files}. Unlike files
@@ -164,7 +164,7 @@ The purpose of the first example is to show that working with memory-backed
 HDF5 files is as straightforward as working with HDF5 files in a file system.
 
 \subsection{Goal}
-\label{sec:org2d56df6}
+\label{sec:orgebcb91a}
 
 \emph{We would like to write an array of integers to a 2D dataset in a
 memory-backed HDF5 file.}
@@ -173,7 +173,7 @@ Before we look at memory-backed HDF5 files, let's recap the steps for
 ordinary HDF5 files!
 
 \subsection{Outline for an HDF5 file in a file system}
-\label{sec:org92fff9f}
+\label{sec:orgee51764}
 
 Given our important array \texttt{data}, we:
 \begin{enumerate}
@@ -182,7 +182,6 @@ Given our important array \texttt{data}, we:
 \item Close the dataset
 \item Close the file, after printing the HDF5 library version and the file size
 on-disk
-\end{enumerate}
 
 \textbf{\textbf{Note:}} The paragraph following the outline shows the actual program
 output.
@@ -195,16 +194,16 @@ output.
  5  {
  6    int data[] = {0, 1, 2, 3, 4, 5};
  7    hid_t file = (*
- 8                   <<make-disk-file>> ) ("disk.h5");
+ 8                  <<make-disk-file>> ) ("disk.h5");
  9    hid_t dset = (*
-10                   <<make-2D-dataset>> ) (file, "2x3", H5T_STD_I32LE,
-11                                          (hsize_t[]){2,3}, data);
+10                  <<make-2D-dataset>> ) (file, "2x3", H5T_STD_I32LE,
+11                                         (hsize_t[]){2,3}, data);
 12    H5Dclose(dset);
 13
 14    (*
-15      <<print-lib-version>> ) ();
+15     <<print-lib-version>> ) ();
 16    (*
-17      <<print-file-size>> ) (file);
+17     <<print-file-size>> ) (file);
 18
 19    H5Fclose(file);
 20
@@ -219,19 +218,20 @@ File size: 4096 bytes
 \end{verbatim}
 
 The \texttt{<<boilerplate>>} block on line 1 has the usual \texttt{include}
-directives and is provided in the \hyperref[sec:orgd07fd63]{appendix}.
+directives and is provided in the \hyperref[sec:org77e4cdd]{appendix}.
 
 The \texttt{<<make-disk-file>>} block (line 7) is merely a call to
-\texttt{H5Fcreate} (see section \ref{orgba3acb2}) and the
+\texttt{H5Fcreate} (see section \ref{orgcf43042}) and the
 \texttt{<<make-2D-dataset>>} block (line 9) is a call to \texttt{H5Dcreate} with
-all the trimmings (see section \ref{org38d97dd}).
+all the trimmings (see section \ref{org343c5be}).
+\end{enumerate}
 
 \subsection{Outline for a memory-backed HDF5 file}
-\label{sec:org902b199}
+\label{sec:org0a10949}
 
 The outline for memory-backed HDF5 files is almost identical to on-disk
 files. The \texttt{<<make-mem-file>>} block on line 7 has two
-additional arguments (see section \ref{org6650a61}). The first is the
+additional arguments (see section \ref{org0787562}). The first is the
 increment (in bytes) by which the backing memory buffer will grow, should
 that be necessary. In this example, it's 1 MiB. The third parameter, a flag,
 controls if the memory-backed file is persisted in storage after closing.
@@ -247,16 +247,16 @@ after running the program.
  5  {
  6    int data[] = {0, 1, 2, 3, 4, 5};
  7    hid_t file = (*
- 8                   <<make-mem-file>> ) ("core.h5", 1024*1024, (argc > 1));
+ 8                  <<make-mem-file>> ) ("core.h5", 1024*1024, (argc > 1));
  9    hid_t dset = (*
-10                   <<make-2D-dataset>> ) (file, "2x3", H5T_STD_I32LE,
-11                                          (hsize_t[]){2,3}, data);
+10                  <<make-2D-dataset>> ) (file, "2x3", H5T_STD_I32LE,
+11                                         (hsize_t[]){2,3}, data);
 12    H5Dclose(dset);
 13
 14    (*
-15      <<print-lib-version>> ) ();
+15     <<print-lib-version>> ) ();
 16    (*
-17      <<print-file-size>> ) (file);
+17     <<print-file-size>> ) (file);
 18
 19    H5Fclose(file);
 20
@@ -277,13 +277,13 @@ line 7, which shows that
 \item We are dealing with HDF5 files after all.
 \item The switch to memory-backed HDF5 files requires only minor changes of
 existing applications.
+
+See section \ref{org0787562} for the implementation of
+\texttt{<<make-mem-files>>}.
 \end{enumerate}
 
-See section \ref{org6650a61} for the implementation of
-\texttt{<<make-mem-files>>}.
-
 \subsection{Discussion}
-\label{sec:org972d7e2}
+\label{sec:orgbdd07eb}
 
 When running the executable \texttt{core-vfd1} for the memory-backed HDF5 file, we
 are informed that, for HDF5 library version 1.13.0, the (in-memory) file has
@@ -299,30 +299,30 @@ unused space in the memory-backed HDF5 file before closing it.
 \textbf{\textbf{Bottom line:}} Memory-backed HDF5 files are as easy to use as HDF5 files
 in file systems.
 
-\section{Copying Objects \label{orga6e6d24}}
-\label{sec:org3e7daa7}
+\section{Copying Objects \label{org0178d17}}
+\label{sec:orgecd53b6}
 
-We can copy HDF5 objects such as groups and datasets inside the same HDF5
-file or across HDF5 files. A common scenario is to use a memory-backed HDF5
-file as a scratch space (or RAM disk) and, before closing it, to store only a
-few selected objects of interest in an on-disk HDF5 file.
+We can copy HDF5 objects such as groups and datasets inside the same HDF5 file
+or across HDF5 files. A common scenario is to use a memory-backed HDF5 file as
+a scratch space (or RAM disk) and, before closing it, to store only a few
+selected objects of interest in an on-disk HDF5 file.
 
 \subsection{Goal}
-\label{sec:orgd57ac4f}
+\label{sec:org99895c2}
 
-\emph{We would like to copy a dataset from a memory-backed HDF5 file to an HDF5
-file stored in a file system.}
+\emph{We would like to copy a dataset from a memory-backed HDF5 file to an HDF5 file
+stored in a file system.}
 
 \subsection{Outline}
-\label{sec:org6e03278}
+\label{sec:orgc9ba792}
 
-In this example, we are working with two HDF5 files, one memory-backed and
-the other in a file system. We re-use the file creation building blocks
-(lines 8, 10) and the dataset creation building block
-(line 12) to create a dataset \texttt{dset\_m} in the memory-backed HDF5
-file \texttt{file\_m}. Fortunately, the HDF5 library provides a function, \texttt{H5Ocopy},
-for copying HDF5 objects between HDF5 files. All we have to do is call it on
-line 21.
+In this example, we are working with two HDF5 files, one memory-backed and the
+other in a file system. We re-use the file creation building blocks (lines
+8, 10) and the dataset creation building block (line
+12) to create a dataset \texttt{dset\_m} in the memory-backed HDF5 file
+\texttt{file\_m}. Fortunately, the HDF5 library provides a function, \texttt{H5Ocopy}, for
+copying HDF5 objects between HDF5 files. All we have to do is call it on line
+21.
 
 \begin{verbatim}
  1
@@ -333,25 +333,25 @@ line 21.
  6    int data[] = {0, 1, 2, 3, 4, 5};
  7
  8    hid_t file_d = (*
- 9                     <<make-disk-file>> ) ("disk.h5");
+ 9                    <<make-disk-file>> ) ("disk.h5");
 10    hid_t file_m = (*
-11                     <<make-mem-file>> ) ("core.h5", 4096, (argc > 1));
+11                    <<make-mem-file>> ) ("core.h5", 4096, (argc > 1));
 12    hid_t dset_m = (*
-13                     <<make-2D-dataset>> ) (file_m, "2x3", H5T_STD_I32LE,
-14                                            (hsize_t[]){2,3}, data);
+13                    <<make-2D-dataset>> ) (file_m, "2x3", H5T_STD_I32LE,
+14                                           (hsize_t[]){2,3}, data);
 15    H5Dclose(dset_m);
 16
 17    (*
-18      <<print-lib-version>> ) ();
+18     <<print-lib-version>> ) ();
 19    (*
-20      <<print-file-size>> ) (file_m);
+20     <<print-file-size>> ) (file_m);
 21
 22    H5Ocopy(file_m, "2x3", file_d, "2x3copy", H5P_DEFAULT, H5P_DEFAULT);
 23
 24    H5Fclose(file_m);
 25
 26    (*
-27      <<print-file-size>> ) (file_d);
+27     <<print-file-size>> ) (file_d);
 28
 29    H5Fclose(file_d);
 30
@@ -367,30 +367,29 @@ File size: 4096 bytes
 \end{verbatim}
 
 \subsection{Discussion}
-\label{sec:org8875a7c}
+\label{sec:org2f78483}
 
 When running the program \texttt{core-vfd2}, we are informed that, for HDF5 library
-version 1.13.0, both files have a size of 4 KiB. That is a coincidence of
-two independent factors: Firstly, in line 10, we instructed the
-HDF5 library to grow the memory-backed HDF5 file in 4 KiB increments, and
-one increment is plenty to accommodate our small dataset. Secondly, the 4
-KiB size of the \texttt{disk.h5} file is due to paged allocation with 4 KiB being
-the default page size. (\emph{Really?})
+version 1.13.0, both files have a size of 4 KiB. That is a coincidence of two
+independent factors: Firstly, in line 10, we instructed the HDF5
+library to grow the memory-backed HDF5 file in 4 KiB increments, and one
+increment is plenty to accommodate our small dataset. Secondly, the 4 KiB size
+of the \texttt{disk.h5} file is due to paged allocation with 4 KiB being the default
+page size. (\emph{Really?})
 
 \textbf{\textbf{Bottom line:}} Transferring objects or parts of a hierarchy from a
-memory-backed HDF5 file to another HDF5 file, be it in a file system or
-another memory-backed file, is easy thanks to \texttt{H5Ocopy}!
+memory-backed HDF5 file to another HDF5 file, be it in a file system or another
+memory-backed file, is easy thanks to \texttt{H5Ocopy}!
 
-\section{Delaying Decisions \label{orgca09e6b}}
-\label{sec:orgc03bf5d}
+\section{Delaying Decisions \label{org430fa7f}}
+\label{sec:org679a567}
 
-The developers and maintainers of certain application types, for example,
-data persistence back-ends of interactive applications, face specific
-challenges which stem from the \emph{uncertainty} over the particular course of
-action(s) their users take as part of a transaction or over the duration of a
-session. Ideally, any decisions that amount to commitments not easily undone
-later can be postponed or delayed until a better informed decision can be
-made.
+The developers and maintainers of certain application types, for example, data
+persistence back-ends of interactive applications, face specific challenges
+which stem from the \emph{uncertainty} over the particular course of action(s) their
+users take as part of a transaction or over the duration of a session. Ideally,
+any decisions that amount to commitments not easily undone later can be
+postponed or delayed until a better informed decision can be made.
 
 As stated earlier, when creating new objects, the HDF5 library needs certain
 information (e.g., creation properties) which stays with an object throughout
@@ -401,18 +400,18 @@ other HDF5 files as a holding area for objects whose final whereabouts are
 uncertain at object creation time.
 
 \subsection{Goal}
-\label{sec:org327831f}
+\label{sec:org6ba380f}
 
-\emph{We would like to maintain a potentially very large 2D dataset in a
+/We would like to maintain a potentially very large 2D dataset in a
 memory-backed HDF5 file and eventually persist it to an HDF5 file in a file
-system.}
+system./
 
 \subsection{Outline}
-\label{sec:orgf271b64}
+\label{sec:org48b5989}
 
 There are a few new snippets in this example. The \texttt{<<make-big-2D-dataset>>}
 block on line 11 appears identical to \texttt{<<make-2D-dataset>>}, but the
-implementation in section \ref{org9d4b4ca} shows that we are dealing
+implementation in section \ref{orgb438884} shows that we are dealing
 with a datset of potentially arbitrary extent, using chunked storage layout.
 
 Between lines 20 and 24, we mimic the uncertainty around its
@@ -420,11 +419,11 @@ extent during an application's lifetime by growing and shrinking it using
 \texttt{H5Dset\_extent}.
 
 On line 28, we check its size once more (see section
-\ref{orge27ca63}). If the size doesn't exceed 60,000 bytes, we optimize its
+\ref{orgfba2611}). If the size doesn't exceed 60,000 bytes, we optimize its
 persisted representation by using the so-called compact storage layout (line
-31 and section \ref{org563ffcf}). In this case we need to transfer
-the data manually (line 33 and section \ref{org01157bd}).
-Otherwise, we fall back onto \texttt{H5Ocopy} (line 39).
+31 and section \ref{org49ffde5}). In this case we need to transfer
+the data manually (line 33 and section \ref{org0f753cb}).  Otherwise,
+we fall back onto \texttt{H5Ocopy} (line 39).
 
 \begin{verbatim}
  1
@@ -434,17 +433,17 @@ Otherwise, we fall back onto \texttt{H5Ocopy} (line 39).
  5  {
  6    int data[] = {0, 1, 2, 3, 4, 5};
  7    hid_t file_d = (*
- 8                     <<make-disk-file>> ) ("disk.h5");
+ 8                    <<make-disk-file>> ) ("disk.h5");
  9    hid_t file_m = (*
-10                     <<make-mem-file>> ) ("core.h5", 1024*1024, (argc > 1));
+10                    <<make-mem-file>> ) ("core.h5", 1024*1024, (argc > 1));
 11    hid_t dset_m = (*
-12                     <<make-big-2D-dataset>> ) (file_m, "2x3",
-13                                                H5T_NATIVE_INT32,
-14                                                (hsize_t[]){2,3}, data);
+12                    <<make-big-2D-dataset>> ) (file_m, "2x3",
+13                                               H5T_NATIVE_INT32,
+14                                               (hsize_t[]){2,3}, data);
 15    (*
-16      <<print-lib-version>> ) ();
+16     <<print-lib-version>> ) ();
 17    (*
-18      <<print-file-size>> ) (file_m);
+18     <<print-file-size>> ) (file_m);
 19
 20    { /* UNCERTAINTY */
 21      H5Dset_extent(dset_m, (hsize_t[]){200,300});
@@ -455,25 +454,25 @@ Otherwise, we fall back onto \texttt{H5Ocopy} (line 39).
 26    }
 27
 28    if ((*
-29          <<dataset-size>>) (dset_m) < 60000)
-30    {
-31       hid_t dset_d = (*
+29         <<dataset-size>>) (dset_m) < 60000)
+30      {
+31        hid_t dset_d = (*
 32                        <<create-compact>> ) (dset_m, file_d, "2x3copy");
-33       (*
+33        (*
 34         <<xfer-data>> ) (dset_m, dset_d);
 35
-36       H5Dclose(dset_d);
-37    }
+36        H5Dclose(dset_d);
+37      }
 38    else
-39    {
-40      H5Ocopy(file_m, "2x3", file_d, "2x3copy", H5P_DEFAULT, H5P_DEFAULT);
-41    }
+39      {
+40        H5Ocopy(file_m, "2x3", file_d, "2x3copy", H5P_DEFAULT, H5P_DEFAULT);
+41      }
 42
 43    H5Dclose(dset_m);
 44    H5Fclose(file_m);
 45
 46    (*
-47      <<print-file-size>> ) (file_d);
+47     <<print-file-size>> ) (file_d);
 48
 49    H5Fclose(file_d);
 50
@@ -489,52 +488,51 @@ File size: 2048 bytes
 \end{verbatim}
 
 \subsection{Discussion}
-\label{sec:org2079029}
+\label{sec:org8bc5377}
 
 When running the program \texttt{core-vfd3}, we are informed that, for HDF5 library
-version 1.13.0, the memory-backed HDF5 file has a size of over 4 MiB while
-the persisted file is just 2 KiB.
+version 1.13.0, the memory-backed HDF5 file has a size of over 4 MiB while the
+persisted file is just 2 KiB.
 
-As can be seen in section \ref{org9d4b4ca}, the chunk size chosen
-for the \texttt{/2x3} dataset is 4 MiB. Although we are writing only six 32-bit
-integer (24 bytes), a full 4 MiB chunk needs to be allocated, which explains
-the overall size for the memory-backed HDF5 file.
+As can be seen in section \ref{orgb438884}, the chunk size chosen for
+the \texttt{/2x3} dataset is 4 MiB. Although we are writing only six 32-bit integer
+(24 bytes), a full 4 MiB chunk needs to be allocated, which explains the
+overall size for the memory-backed HDF5 file.
 
-The compact storage layout is particularly storage- and access-efficient:
-the dataset elements are stored as part of the dataset's object header
-(metadata). This header is read whenever the dataset is opened, and the
-dataset elements "travel along for free", which means that there is no
-separate storage access necessary for subsequent read or write operations.
+The compact storage layout is particularly storage- and access-efficient: the
+dataset elements are stored as part of the dataset's object header
+(metadata). This header is read whenever the dataset is opened, and the dataset
+elements "travel along for free", which means that there is no separate storage
+access necessary for subsequent read or write operations.
 
 \textbf{\textbf{Bottom line:}} The use of memory-backed HDF5 files can lead to substantial
-storage and access performance improvements, if applications "keep their
-cool" and do not prematurely commit storage resources to HDF5 objects.
+storage and access performance improvements, if applications "keep their cool"
+and do not prematurely commit storage resources to HDF5 objects.
 
-\section{Building Blocks \label{orga1e6e52}}
-\label{sec:orgdd09289}
+\section{Building Blocks \label{org877f7e6}}
+\label{sec:org5c78c99}
 
-\subsection{On-disk HDF5 file creation \label{orgba3acb2}}
-\label{sec:orgd389401}
+\subsection{On-disk HDF5 file creation \label{orgcf43042}}
+\label{sec:orgf9792d3}
 
 \texttt{H5Fcreate} has four parameters, of which the first two, file name and access
-flag, are usally in the limelight. To create an on-disk HDF5 file is as easy
-as this:
+flag, are usally in the limelight. To create an on-disk HDF5 file is as easy as
+this:
 
 \begin{verbatim}
 
 lambda(hid_t, (const char* name),
-  {
-    return H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-  })
+       {
+         return H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+       })
 
 \end{verbatim}
 
 The third and the fourth parameter, a \emph{file creation} and a \emph{file access}
-property list (handle), unlock a few extra treats, as we will see in a
-moment.
+property list (handle), unlock a few extra treats, as we will see in a moment.
 
-\subsection{In-memory HDF5 file creation \label{org6650a61}}
-\label{sec:orgf848da4}
+\subsection{In-memory HDF5 file creation \label{org0787562}}
+\label{sec:org93eb665}
 
 We use the fourth parameter of \texttt{H5Fcreate}, a file access property list, to do
 the in-memory magic.
@@ -542,250 +540,249 @@ the in-memory magic.
 \begin{verbatim}
  1
  2  lambda(hid_t, (const char* name, size_t increment, hbool_t flg),
- 3    {
- 4      hid_t retval;
- 5      hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+ 3         {
+ 4           hid_t retval;
+ 5           hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
  6
- 7      H5Pset_fapl_core(fapl, increment, flg);
+ 7           H5Pset_fapl_core(fapl, increment, flg);
  8
- 9      retval = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
-10      H5Pclose(fapl);
-11      return retval;
-12    })
+ 9           retval = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+10           H5Pclose(fapl);
+11           return retval;
+12         })
 13
 \end{verbatim}
 
-That's right, a suitably initialized property list (line 6) makes
-all the difference. This is in fact the ONLY difference between an
-application using regular vs. memory-backed HDF5 files.
+That's right, a suitably initialized property list (line 6) makes all
+the difference. This is in fact the ONLY difference between an application
+using regular vs. memory-backed HDF5 files.
 
-\subsection{Dataset creation \label{org38d97dd}}
-\label{sec:orgc7b7d01}
+\subsection{Dataset creation \label{org343c5be}}
+\label{sec:org54f3ff3}
 
 To create a dataset, we must specify a \texttt{name}, its element type \texttt{dtype}, its
 shape \texttt{dims}, and, optionally, an inital value \texttt{buffer}. Without additional
 customization, the default dataset storage layout is \texttt{H5D\_CONTIGUOUS}, i.e.,
-the (fixed-size) dataset elements are layed out in a contigous (memory
-or storage) region.
+the (fixed-size) dataset elements are layed out in a contigous (memory or
+storage) region.
 
 \begin{verbatim}
  1
  2  lambda(hid_t,
  3         (hid_t file, const char* name, hid_t dtype, const hsize_t* dims, void* buffer),
- 4    {
- 5      hid_t retval;
- 6      hid_t dspace = H5Screate_simple(2, dims, NULL);
+ 4         {
+ 5           hid_t retval;
+ 6           hid_t dspace = H5Screate_simple(2, dims, NULL);
  7
- 8      retval = H5Dcreate(file, name, dtype, dspace,
- 9                         H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+ 8           retval = H5Dcreate(file, name, dtype, dspace,
+ 9                              H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 10
-11      if (buffer)
-12        H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+11           if (buffer)
+12             H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
 13
-14      H5Sclose(dspace);
-15      return retval;
-16    })
+14           H5Sclose(dspace);
+15           return retval;
+16         })
 17
 \end{verbatim}
 
 \textbf{\textbf{WARNING:}} This snippet contains an \emph{important assumption} that may not be
-obvious to many readers: The datatype handle \texttt{dtype} is used in two places
-with different interpretations. In the first instance, line 7,
-it refers to the in-file element type of the dataset to be created. In the
-second instance, line 11, it refers to the datatype of the
-elements in \texttt{buffer}. The assumption is that the two are the same. While this
-assumption is valid in many practical examples, it can lead to subtle errors
-if its violation goes undetected. In a production code, this should be
-either documented and enforced, or an additional datatype argument be passed
-to distinguish them.
+obvious to many readers: The datatype handle \texttt{dtype} is used in two places with
+different interpretations. In the first instance, line 7, it refers
+to the in-file element type of the dataset to be created. In the second
+instance, line 11, it refers to the datatype of the elements in
+\texttt{buffer}. The assumption is that the two are the same. While this assumption is
+valid in many practical examples, it can lead to subtle errors if its violation
+goes undetected. In a production code, this should be either documented and
+enforced, or an additional datatype argument be passed to distinguish them.
 
 \subsection{Print library and file info}
-\label{sec:org35ccb20}
+\label{sec:orgd242fa4}
 
 \begin{verbatim}
 
 lambda(void, (void),
-  {
-    unsigned majnum;
-    unsigned minnum;
-    unsigned relnum;
-    H5get_libversion(&majnum, &minnum, &relnum);
-    printf("HDF5 library version %d.%d.%d\n", majnum, minnum, relnum);
-  })
+       {
+         unsigned majnum;
+         unsigned minnum;
+         unsigned relnum;
+         H5get_libversion(&majnum, &minnum, &relnum);
+         printf("HDF5 library version %d.%d.%d\n", majnum, minnum, relnum);
+       })
 
 \end{verbatim}
 
 \begin{verbatim}
 
 lambda(void, (hid_t file),
-  {
-    hsize_t size;
-    H5Fget_filesize(file, &size);
-    printf("File size: %ld bytes\n", size);
-  })
+       {
+         hsize_t size;
+         H5Fget_filesize(file, &size);
+         printf("File size: %ld bytes\n", size);
+       })
 
 \end{verbatim}
 
-\subsection{Big dataset creation \label{org9d4b4ca}}
-\label{sec:org4f4542a}
+\subsection{Big dataset creation \label{orgb438884}}
+\label{sec:org92b93dd}
 
 This \texttt{lambda} returns a handle to the potentially large dataset in the
 memory-backed HDF5 file. Since the dataset's final size will only be known
 eventually (e.g., end of epoch or transaction), we can't impose a finite
-maximum extent. On line 6, we set the maxmimum extent as unlimited
-in all (2) dimensions. Currently, the only HDF5 storage layout that supports
-such an arrangement is \emph{chunked storage layout}. By passing a non-default
-dataset creation property list \texttt{dcpl} to \texttt{H5Dcreate} (line 11), we
-instruct the HDF5 library to use chunked storage layout instead of the
-default contiguous layout. For chunked layout, we must specify the size of
-an individual chunk in terms of \emph{dataset elements per chunk}; see line
-9. The size of a chunk in bytes depends on the element datatype.
-In our example (32-bit integers), a 1024\(^{\text{2}}\) chunk occupies 4 MiB of memory
-or storage.
+maximum extent. On line 6, we set the maxmimum extent as unlimited in
+all (2) dimensions. Currently, the only HDF5 storage layout that supports such
+an arrangement is \emph{chunked storage layout}. By passing a non-default dataset
+creation property list \texttt{dcpl} to \texttt{H5Dcreate} (line 11), we instruct the
+HDF5 library to use chunked storage layout instead of the default contiguous
+layout. For chunked layout, we must specify the size of an individual chunk in
+terms of \emph{dataset elements per chunk}; see line 9. The size of a
+chunk in bytes depends on the element datatype.  In our example (32-bit
+integers), a 1024\(^{\text{2}}\) chunk occupies 4 MiB of memory or storage.
 
 \begin{verbatim}
  1
  2  lambda(hid_t,
- 3    (hid_t file, const char* name, hid_t dtype, const hsize_t* dims, void* buffer),
- 4    {
- 5      hid_t retval;
- 6      hid_t dspace = H5Screate_simple(2, dims,
- 7                                      (hsize_t[]){H5S_UNLIMITED, H5S_UNLIMITED});
- 8      hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
+ 3         (hid_t file, const char* name, hid_t dtype, const hsize_t* dims, void* buffer),
+ 4         {
+ 5           hid_t retval;
+ 6           hid_t dspace = H5Screate_simple(2, dims,
+ 7                                           (hsize_t[]){H5S_UNLIMITED, H5S_UNLIMITED});
+ 8           hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
  9
-10      H5Pset_chunk(dcpl, 2, (hsize_t[]){1024, 1024});
-11      retval = H5Dcreate(file, name, dtype, dspace,
-12                         H5P_DEFAULT, dcpl, H5P_DEFAULT);
+10           H5Pset_chunk(dcpl, 2, (hsize_t[]){1024, 1024});
+11           retval = H5Dcreate(file, name, dtype, dspace,
+12                              H5P_DEFAULT, dcpl, H5P_DEFAULT);
 13
-14      if (buffer)
-15        H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+14           if (buffer)
+15             H5Dwrite(retval, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
 16
-17      H5Pclose(dcpl);
-18      H5Sclose(dspace);
-19      return retval;
-20    })
+17           H5Pclose(dcpl);
+18           H5Sclose(dspace);
+19           return retval;
+20         })
 21
 \end{verbatim}
 
 The same warning and assumptions expressed at the end of section
-\ref{org38d97dd} apply to \texttt{dtype}.
+\ref{org343c5be} apply to \texttt{dtype}.
 
-\subsection{Dataset size \label{orge27ca63}}
-\label{sec:org8516942}
+\subsection{Dataset size \label{orgfba2611}}
+\label{sec:org471e392}
 
 This \texttt{lambda} returns the size (in bytes) of the source dataset in the
-memory-backed HDF5 file. It's a matter of determining the storage size
-of an individual dataset element and counting how many there are
-(lines 7, 8)
+memory-backed HDF5 file. It's a matter of determining the storage size of an
+individual dataset element and counting how many there are (lines 7,
+8)
 
 \begin{verbatim}
  1
  2  lambda(hid_t, (hid_t dset),
- 3    {
- 4      size_t retval;
- 5      hid_t ftype = H5Dget_type(dset);
- 6      hid_t dspace = H5Dget_space(dset);
+ 3         {
+ 4           size_t retval;
+ 5           hid_t ftype = H5Dget_type(dset);
+ 6           hid_t dspace = H5Dget_space(dset);
  7
- 8      retval = H5Tget_size(ftype) *
- 9                 (size_t) H5Sget_simple_extent_npoints(dspace);
+ 8           retval = H5Tget_size(ftype) *
+ 9             (size_t) H5Sget_simple_extent_npoints(dspace);
 10
-11      H5Sclose(dspace);
-12      H5Tclose(ftype);
-13      return retval;
-14    })
+11           H5Sclose(dspace);
+12           H5Tclose(ftype);
+13           return retval;
+14         })
 15
 \end{verbatim}
 
-\subsection{Compact replica \label{org563ffcf}}
-\label{sec:org1a60af2}
+\subsection{Compact replica \label{org49ffde5}}
+\label{sec:orga56b37e}
 
-This \texttt{lambda} returns a handle to the freshly minted compact replica of
-the source dataset. (It's a placeholder, because the actual values are
-transferred separately.)
+This \texttt{lambda} returns a handle to the freshly minted compact replica of the
+source dataset. (It's a placeholder, because the actual values are transferred
+separately.)
 
 What sets this dataset creation apart from the default case occurs on lines
 14-16. By passing a non-default dataset creation
-property list \texttt{dcpl} to \texttt{H5Dcreate}, we instruct the HDF5 library to use compact
-storage layout instead of the default contiguous (\texttt{H5D\_CONTIGUOUS}) layout.
+property list \texttt{dcpl} to \texttt{H5Dcreate}, we instruct the HDF5 library to use
+compact storage layout instead of the default contiguous (\texttt{H5D\_CONTIGUOUS})
+layout.
 
 \begin{verbatim}
  1
  2  lambda(hid_t, (hid_t src_dset, hid_t file, const char* name),
- 3    {
- 4      hid_t retval;
- 5      hid_t ftype = H5Dget_type(src_dset);
- 6      hid_t src_dspace = H5Dget_space(src_dset);
- 7      hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
+ 3         {
+ 4           hid_t retval;
+ 5           hid_t ftype = H5Dget_type(src_dset);
+ 6           hid_t src_dspace = H5Dget_space(src_dset);
+ 7           hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
  8
- 9      hid_t dspace = H5Scopy(src_dspace);
-10      hsize_t dims[H5S_MAX_RANK];
-11      H5Sget_simple_extent_dims(dspace, dims, NULL);
-12      H5Sset_extent_simple(dspace, H5Sget_simple_extent_ndims(dspace),
-13                           dims, NULL);
+ 9           hid_t dspace = H5Scopy(src_dspace);
+10           hsize_t dims[H5S_MAX_RANK];
+11           H5Sget_simple_extent_dims(dspace, dims, NULL);
+12           H5Sset_extent_simple(dspace, H5Sget_simple_extent_ndims(dspace),
+13                                dims, NULL);
 14
-15      H5Pset_layout(dcpl, H5D_COMPACT);
-16      retval = H5Dcreate(file, name, ftype, dspace,
-17                         H5P_DEFAULT, dcpl, H5P_DEFAULT);
+15           H5Pset_layout(dcpl, H5D_COMPACT);
+16           retval = H5Dcreate(file, name, ftype, dspace,
+17                              H5P_DEFAULT, dcpl, H5P_DEFAULT);
 18
-19      H5Pclose(dcpl);
-20      H5Sclose(dspace);
-21      H5Tclose(ftype);
-22      return retval;
-23    })
+19           H5Pclose(dcpl);
+20           H5Sclose(dspace);
+21           H5Tclose(ftype);
+22           return retval;
+23         })
 24
 \end{verbatim}
 
 Two other things are worth mentioning about this snippet.
 
 \begin{enumerate}
-\item The dataspace construction on lines 8-12 appears a
-little clumsy. Since the extent of the source dataset \texttt{src\_dset} is not
-changing, why not just work with \texttt{src\_dspace} (line 5)? The
-reason is that dataspaces with \texttt{H5S\_UNLIMITED} extent bounds, for obvious
-reasons, are not supported with compact layout. In that case, in our
-example (!), passing \texttt{src\_dspace} as an argument to \texttt{H5Dcreate} would
-generate an error. It's easier to just create a copy of the dataspace and
-"kill" (\texttt{NULL}) whatever maximum extent there might be.
-\item On line 9, we use the HDF5 library macro
-\texttt{H5S\_MAX\_RANK} to avoid the dynamic allocation of the \texttt{dims} array.
+\item The dataspace construction on lines 8-12 appears a little
+clumsy. Since the extent of the source dataset \texttt{src\_dset} is not changing,
+why not just work with \texttt{src\_dspace} (line 5)? The reason is that
+dataspaces with \texttt{H5S\_UNLIMITED} extent bounds, for obvious reasons, are not
+supported with compact layout. In that case, in our example (!), passing
+\texttt{src\_dspace} as an argument to \texttt{H5Dcreate} would generate an error. It's
+easier to just create a copy of the dataspace and "kill" (\texttt{NULL}) whatever
+maximum extent there might be.
+\item On line 9, we use the HDF5 library macro \texttt{H5S\_MAX\_RANK} to
+avoid the dynamic allocation of the \texttt{dims} array.
 \end{enumerate}
 
-\subsection{Data transfer \label{org01157bd}}
-\label{sec:org03b7667}
+\subsection{Data transfer \label{org0f753cb}}
+\label{sec:org7a353e8}
 
-The HDF5 library does not currently have a function to "automagically"
-transfer data between two datasets, especially datasets with different
-storage layouts. There is not much else we can do but to read (line
-8) the data from the source dataset and to write (line
-9) to the destination dataset.
+The HDF5 library does not currently have a function to "automagically" transfer
+data between two datasets, especially datasets with different storage
+layouts. There is not much else we can do but to read (line 8) the
+data from the source dataset and to write (line 9) to the
+destination dataset.
 
-Since we transfer the data through memory, we need to determine first the
-size of the transfer buffer needed (line 5).
+Since we transfer the data through memory, we need to determine first the size
+of the transfer buffer needed (line 5).
 
 \begin{verbatim}
  1
  2  lambda(void, (hid_t src, hid_t dst),
- 3    {
- 4      hid_t ftype = H5Dget_type(src);
- 5      hid_t dspace = H5Dget_space(src);
- 6      size_t size = H5Tget_size(ftype) * H5Sget_simple_extent_npoints(dspace);
- 7      char* buffer = (char*) malloc(size);
+ 3         {
+ 4           hid_t ftype = H5Dget_type(src);
+ 5           hid_t dspace = H5Dget_space(src);
+ 6           size_t size = H5Tget_size(ftype) * H5Sget_simple_extent_npoints(dspace);
+ 7           char* buffer = (char*) malloc(size);
  8
- 9      H5Dread(src, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
-10      H5Dwrite(dst, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+ 9           H5Dread(src, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
+10           H5Dwrite(dst, ftype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buffer);
 11
-12      free(buffer);
-13      H5Sclose(dspace);
-14      H5Tclose(ftype);
-15    })
+12           free(buffer);
+13           H5Sclose(dspace);
+14           H5Tclose(ftype);
+15         })
 16
 \end{verbatim}
 
 \section{Appendix}
-\label{sec:org7bc92a7}
+\label{sec:org2b4893a}
 
 \subsection{Versions}
-\label{sec:org5a092bd}
+\label{sec:orga44ab7a}
 This document was tested with the following software versions:
 
 \begin{verbatim}
@@ -819,7 +816,8 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 \end{verbatim}
 
 \subsection{Boilerplate with a twist}
-\label{sec:orgd07fd63}
+\label{sec:org77e4cdd}
+
 These are the header files needed to build the examples.
 
 \begin{verbatim}
@@ -845,9 +843,8 @@ The more interesting bit is the \texttt{lambda} macro by \href{https://hackaday.
 \end{verbatim}
 
 It uses two features of GNU C (\texttt{-{}-std=gnu99}), namely, \href{http://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html}{nested functions} and
-\href{https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html}{statement expressions}, which lets us wrap C code blocks as "lambda
-functions", thereby making longer pieces of code easier to follow and
-digest.
+\href{https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html}{statement expressions}, which lets us wrap C code blocks as "lambda functions",
+thereby making longer pieces of code easier to follow and digest.
 
 \begin{verbatim}
 
