@@ -1,0 +1,473 @@
+#+TITLE: HDF5 Introduction
+#+AUTHOR: Gerd Heber
+#+EMAIL: gheber@hdfgroup.org
+#+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
+#+DATE: [2021-01-01 Fri]
+#+OPTIONS: author:t creator:t email:t toc:nil num:nil
+
+#+PROPERTY: header-args :eval never-export
+
+* Outline
+
+#+begin_src plantuml :file img/outline.png :exports results
+@startmindmap
+scale 1
+<style>
+mindmapDiagram {
+.orange {
+BackgroundColor orange
+}
+.blue {
+BackgroundColor lightblue
+}
+.green {
+BackgroundColor lightgreen
+}
+}
+</style>
++ <b>HDF5</b> <<orange>>
+++ <b>The HDF Group</b>
++++_ Values
++++_ Mission
++++_ FOSS
++++_ Services
+++ <i>Hello, HDF5!</i>
++++_ Learning Curve
+++ Data Model
++++_ Array Variables
++++_ (Multi-)Graphs
++++_ Metadata
+-- Software
+---_ HDF5 Library
+---_ Tools
+---_ HSDS
+-- Ecosystem <<green>>
+---_ Python, R, Julia, ...
+---_ Edge (IoT), HPC, Cloud
+---_ Vendors
+-- Communities <<blue>>
+---_ Outreach
+---_ Standards
+---_ Data Products
+@endmindmap
+#+end_src
+
+#+RESULTS:
+[[file:img/outline.png]]
+
+* The HDF Group
+
+** TODO Values
+** TODO Mission
+** TODO FOSS
+** TODO Services
+
+* The HDF Community
+
+It's hard to find a walk of life /not/ touched by HDF5. (Maybe literary studies?)
+
+- Public and private sector
+- Academia, government, industry
+- Organizations (NASA, DOE, CEA, ITER, DESY)
+- Standards bodies (OGC, EXPRESS, Allotrope, CGNS, RESQML)
+- Sectors (aerospace, oil & gas, pharma, power systems, finance)
+- Research (astronomy, life science, material science, ML)
+- Developers
+- Integrators
+
+* Starting Point
+
+- [[https://mitpress.mit.edu/books/raw-data-oxymoron]["Raw data" is an oxymoron]] (It needs an domain-specific /interpretive base/.)
+- Data comes in many /representations/: in registers, memory, storage...
+- Some data is used as /metadata/ for other data.
+- Data can be "at rest" (files, objects) or transit environments (I/O)
+
+/Data management/ is the art of:
+
+  1. Maintaining data integrity
+  2. Leaving clues for the interpretive base
+  3. Removing "data friction"
+
+* H - D - F - 5
+
+#+begin_quote
+/The meaning of a word is its use in the language./ (Wittgenstein)
+#+end_quote
+
+Depending on your use:
+1. HDF5 is a /generic/ data management interface
+   - HDF5 sits on the periphery
+   - You get some of the benefits, e.g., portability
+
+2. HDF5 is a data management /interface toolkit/.
+   - HDF5 is part of the fabric
+   - Domain-specific interfaces to manage self-describing data representations
+   - You get a streamlined /data life cycle/
+
+HDF5-based interfaces often surpass other solutions in power, sophistication,
+simplicity, performance, and portability.
+
+Historically & literally: HDF5 = _Hierarchical Data Format v5_
+
+** Hierarchical
+
+Items are presented in a /hierarchically structured name space/
+
+#+begin_src plantuml :file img/hdf5-container.png :exports results
+  scale 1
+  actor User #red
+  rectangle "HDF5 Container" {
+  card B [
+      / (root)
+      |_ Level 1a
+        |_ Level 2a
+        |_ Level 2b
+        |_ Level 2c
+          |_ Level 3a
+        |_ Level 2d
+      |_ Level 1b
+        |_ Level 2e
+  ]
+  }
+  User -> B
+  #+end_src
+
+#+RESULTS:
+[[file:img/hdf5-container.png]]
+
+** Data
+
+/Complex data/, *Metadata*
+
+  - (Complex = consisting of interconnected or interwoven parts, composite)
+  - Physical experiments & observational data
+  - Simulations
+  - Values of function evaluations
+  - Streams
+
+Data is captured in a /web of objects./ Links and nodes can be pre-defined or
+user-defined items.
+
+#+begin_src plantuml :file img/technical-detail.png :exports results
+    scale 1
+    card "/" as root
+    interface " " as i1a
+    interface " " as i1b
+    interface " " as i2a
+    queue " " as i2b
+    interface " " as i2c
+    collections " " as i2d
+    cloud " " as i2e
+    node " " as i3a
+    root --> i1a : "Level 1a"
+    i1a --> i2a : "Level 2a"
+    i1a --> i2b : "Level 2b"
+    i1a --> i2c #blue;line.dotted;text:blue : "Level 2c"
+    i2c --> i3a : "Level 3a"
+    i1a --> i2d : "Level 2d"
+    root --> i1b #line:red;line.bold;text:red : "Level 1b"
+    i1b --> i2e #green;line.dashed;text:green : "Level 2e"
+    #+end_src
+
+#+RESULTS:
+[[file:img/technical-detail.png]]
+
+** Format
+
+An arrangement of data such that it can be processed or stored by a computer
+
+Many different layouts exist for such /HDF5 containers/:
+- Single file
+- Multiple files
+- Memory buffers
+- Collection of objects in [[https://www.intel.com/content/www/us/en/high-performance-computing/daos-high-performance-storage-brief.html][Intel DAOS]] or [[https://aws.amazon.com/s3/][Amazon S3]]
+- ...
+
+(And you can create your own layouts!)
+
+** (Version) 5
+
+We've tried to make all the mistakes for you!
+
+* Hello, HDF5!
+
+The introduction to [[https://g.co/kgs/dZehBL][Andrew Collette's]] [[https://www.oreilly.com/library/view/python-and-hdf5/9781491944981/][book]]
+
+#+ATTR_HTML: :width 300px
+#+ATTR_LATEX: :width 300px
+[[file:./img/Python_and_HDF5.png]]
+
+begins with an intuitive example:
+
+#+begin_src python :exports both :tangle "src/weather_station.py" :results output
+
+import h5py, numpy as np, platform as pfm
+
+# Weather stations record temperatures and wind speeds
+
+with h5py.File('hello.hdf5', 'w') as f:
+    f.attrs['system'] = pfm.system();
+    f.attrs['release'] = pfm.release();
+    f.attrs['processor'] = pfm.processor();
+
+    # station ID 15
+    temperature = np.random.random(1024)
+    dt = 10.0   # Temperature sampled every 10 seconds
+    wind = np.random.random(2048)
+    dt_wind = 5.0   # Wind sampled every 5 seconds
+    f['/15/temperature'] = temperature
+    f['/15/temperature'].attrs['dt'] = dt
+    f['/15/wind'] = wind
+    f['/15/wind'].attrs['dt'] = dt_wind
+    # station 20
+    # f["/20/..."] = ...
+
+from pathlib import Path
+print('File size: {} bytes'.format(Path('hello.hdf5').stat().st_size))
+
+#+end_src
+
+#+RESULTS:
+: File size: 32768 bytes
+
+After running the example, we have an HDF5 file containing temperature and wind
+speed time series from one or more weather stations.
+
+* Data Model
+
+The HDF5 data model consists of /two primitives/ and a set of combination rules.
+
+#+begin_src plantuml :file img/hdf5-primitives.png :exports results
+scale 1.5
+folder " group "
+node " array variable "
+    #+end_src
+
+    #+RESULTS:
+    [[file:img/hdf5-primitives.png]]
+
+
+Judging from our =Hello, HDF5!= example, we are dealing with /groupings of
+array(variable)s/.  There's one grouping for each weather station and there are
+two array variables (=temperature= and =wind=) per grouping. This is almost
+accurate, except that all weather station groupings are part of the so-called
+/root group/, and that there are additional decorations (system characteristics,
+sampling rates).
+
+#+begin_src plantuml :file img/hello-hdf5.png :exports results
+  scale 1
+  actor User #red
+  rectangle "HDF5 Container" {
+  card B [
+      / (root)
+      |_ 15
+        |_ temperature
+        |_ wind
+      |_ 20
+        |_ ...
+  ]
+  }
+  User -> B
+  #+end_src
+
+  #+RESULTS:
+  [[file:img/hello-hdf5.png]]
+
+There's exactly one root group. Groups can be "nested." So-called /attributes/,
+named array variables, can decorate other groups or array variables.
+
+For the purpose of this introduction, it's OK to think of an HDF5 container as a
+/file system in a file/. (Of course, as long as there is a file...)
+
+* Ecosystem
+
+** TODO Language bindings
+Python, R, C++, Julia, ...
+
+** IoT / Edge
+
+Download a fully featured Python 3 IDE to your mobile device from the [[https://play.google.com/store/apps/details?id=ru.iiec.pydroid3][Google Play store]].
+
+#+ATTR_HTML: :width 480px
+#+ATTR_LATEX: :width 480px
+[[file:./img/Pydroid3.png]]
+
+*Homework:* Run the ="Hello, HDF5!"= example on your phone and look at the file on
+your computer!
+
+** HPC
+
+ Turning a sequential program into an MPI-parallel program
+
+*** TODO A single process writing to a single file
+
+*** TODO Multiple MPI processes writing to a single dataset in a shared file
+
+** Cloud
+
+The best known example is the [[https://www.hdfgroup.org/solutions/highly-scalable-data-service-hsds/][Highly Scalable Data Service]] (HSDS). See John
+Readey's [[https://www.youtube.com/watch?v=9b5TO7drqqE][presentation]].
+
+*CAUTION:* To work with HDF5 in cloud-based environments means different things to
+different audiences. Without context, it means just this:
+#+begin_src plantuml :file img/cloud-hdf5.png :exports results
+scale 2
+cloud " HDF5 "
+    #+end_src
+
+    #+RESULTS:
+    [[file:img/cloud-hdf5.png]]
+
+*  Simple Data Analysis
+
+*Reference:* [[https://www.youtube.com/watch?v=AP4LX8L7MFM][Reproducible Research with GNU Emacs and Org-mode]] by Thibault Lestang
+
+The following stochastic differential equation describes a [[https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process][1D /Ornstein-Uhlenbeck/
+process]]:
+
+\begin{equation}
+\mathrm{d}x_t = -\mu x_t + \sqrt{2D}\mathrm{d}W_t
+\end{equation}
+
+$\mu > 0$ and $D > 0$ are parameters and $W_t$ denotes the Wiener process.
+
+** Simulation
+
+A sample trajectory of the stochastic process can be approximated with a snippet
+of C++ code.
+
+#+NAME: initial_data
+#+begin_src C++ :includes '("<iostream>" "<random>") :cache yes :noweb yes :results silent
+std::default_random_engine generator;
+std::normal_distribution<> distribution{0.0, 1.0};
+
+double dt = 0.1, mu = 0.0, D = 0.5;
+
+double x = 0.0;
+
+for (unsigned i = 0; i < 100; ++i)
+  {
+    auto t = i*dt;
+    auto dw = distribution(generator);
+    x += (mu - x)*dt + sqrt(2.*D)*dw;
+    std::cout << t << " " << x << std::endl;
+  }
+#+end_src
+
+** Visualization
+
+#+HEADER: :var timeseries=initial_data :results file :dir "./img/"
+#+begin_src python :exports both
+import numpy as np, matplotlib.pyplot as plt
+
+timeseries = np.array(timeseries)
+fig = plt.figure()
+plt.plot(timeseries[:,0], timeseries[:,1])
+plt.subplot(111).set_xlabel('t')
+plt.subplot(111).set_ylabel('x')
+plt.savefig('timeseries_vis.png')
+return 'timeseries_vis.png'
+#+end_src
+
+#+RESULTS:
+[[file:img/timeseries_vis.png]]
+
+** Statistics
+
+The following function computes the sample mean.
+
+#+NAME: mean
+#+HEADER: :var x=0 :exports code
+#+begin_src python
+from numpy import array, mean
+values = array(x)[:,1]
+return mean(values)
+#+end_src
+
+After a long and complicated statistical analysis, we conclude that the sample
+average is call_mean(initial_data) {{{results(=-0.023857982999999992=)}}}.
+
+** Storing the sample trajectory
+
+The following function stores our sample as a =100 x 2= 2D array.
+
+#+NAME: dump2D
+#+HEADER: :var x=0 :exports code
+#+begin_src python
+import h5py, numpy as np
+
+with h5py.File('hello.hdf5', 'a') as f:
+    f['t_x'] = np.array(x)
+    return 'SUCCESS'
+#+end_src
+
+Dumping the sample was a call_dump2D(initial_data) {{{results(=SUCCESS=)}}}
+
+Except for the name of the dataset =t_x=, it may not be obvious who's who.
+
+*** Field names
+
+#+NAME: dumpCompound
+#+HEADER: :var x=0 :exports code
+#+begin_src python
+
+import h5py, numpy as np
+
+dt = np.dtype([("time", np.double), ("position", np.double)])
+a = np.array(x)
+
+with h5py.File('hello.hdf5', 'a') as f:
+    f.create_dataset("compound", (100,), dtype=dt)
+    f['compound'][:,'time'] = a[:,0]
+    f['compound'][:,'position'] = a[:,1]
+    return 'SUCCESS'
+
+#+end_src
+
+Dumping the sample was a call_dumpCompound(initial_data) {{{results(=SUCCESS=)}}}
+
+* Creating a Self-Contained Package
+
+** TODO Setting attributes
+
+Make this more self contained by reporting additional parameters.
+
+** Image handling
+
+*** TODO Opaque datasets
+
+*** TODO Annotated 2D datasets
+
+** TODO Jamming a text file
+
+#+NAME: org-file-name
+#+begin_src emacs-lisp :results silent :exports none
+buffer-file-name
+#+end_src
+
+#+begin_src sh :var ublock=org-file-name :results output verbatim :exports both
+h5jam -i hello.hdf5 -u $ublock --clobber
+head -n 10 hello.hdf5
+#+end_src
+
+#+RESULTS:
+#+begin_example
+,#+TITLE: HDF5 Introduction
+,#+AUTHOR: Gerd Heber
+,#+EMAIL: gheber@hdfgroup.org
+,#+DATE: [2021-01-01 Fri]
+,#+OPTIONS: toc:nil num:nil
+
+,#+PROPERTY: header-args :eval never-export
+
+,* Outline
+
+#+end_example
+
+** TODO External layout example
+
+* COMMENT html style specifications
+
+# Local Variables:
+# org-html-head: "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/stylesheet.css\" />"
+# End:
