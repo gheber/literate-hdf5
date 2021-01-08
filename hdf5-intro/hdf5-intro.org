@@ -29,7 +29,6 @@ BackgroundColor lightgreen
 ++ <b>The HDF Group</b>
 +++_ Values
 +++_ Mission
-+++_ FOSS
 +++_ Services
 ++ <i>Hello, HDF5!</i>
 +++_ Learning Curve
@@ -58,8 +57,8 @@ BackgroundColor lightgreen
 * The HDF Group
 
 ** TODO Values
+*** TODO FOSS
 ** TODO Mission
-** TODO FOSS
 ** TODO Services
 
 * The HDF Community
@@ -72,8 +71,8 @@ It's hard to find a walk of life /not/ touched by HDF5. (Maybe literary studies?
 - Standards bodies (OGC, EXPRESS, Allotrope, CGNS, RESQML)
 - Sectors (aerospace, oil & gas, pharma, power systems, finance)
 - Research (astronomy, life science, material science, ML)
+- Data integrators, life cycle managers
 - Developers
-- Integrators
 
 * Starting Point
 
@@ -90,46 +89,49 @@ It's hard to find a walk of life /not/ touched by HDF5. (Maybe literary studies?
 
 * H - D - F - 5
 
+Historically & literally: HDF5 = *H* ierarchical *D* ata *F* ormat v *5*
+
 #+begin_quote
 /The meaning of a word is its use in the language./ (Wittgenstein)
 #+end_quote
 
-Depending on your use:
-1. HDF5 is a /generic/ data management interface
+Depending on your use HDF5 is:
+
+1. A _generic_ (=not specific) data management _interface_ with a bent
+   toward multi-dimensional arrays
    - HDF5 sits on the periphery
    - You get some of the benefits, e.g., portability
 
-2. HDF5 is a data management /interface toolkit/.
+2. A data management _interface toolkit_.
    - HDF5 is part of the fabric
-   - Domain-specific interfaces to manage self-describing data representations
+   - You create domain-specific interfaces to manage self-describing data
+     representations
    - You get a streamlined /data life cycle/
 
 HDF5-based interfaces often surpass other solutions in power, sophistication,
 simplicity, performance, and portability.
-
-Historically & literally: HDF5 = _Hierarchical Data Format v5_
 
 ** Hierarchical
 
 Items are presented in a /hierarchically structured name space/
 
 #+begin_src plantuml :file img/hdf5-container.png :exports results
-  scale 1
-  actor User #red
-  rectangle "HDF5 Container" {
-  card B [
-      / (root)
-      |_ Level 1a
-        |_ Level 2a
-        |_ Level 2b
-        |_ Level 2c
-          |_ Level 3a
-        |_ Level 2d
-      |_ Level 1b
-        |_ Level 2e
-  ]
-  }
-  User -> B
+scale 1
+actor User #red
+rectangle "HDF5 Container" {
+card B [
+    / (root)
+    |_ Level 1a
+      |_ Level 2a
+      |_ Level 2b
+      |_ Level 2c
+        |_ Level 3a
+      |_ Level 2d
+    |_ Level 1b
+      |_ Level 2e
+]
+}
+User -> B
   #+end_src
 
 #+RESULTS:
@@ -137,7 +139,7 @@ Items are presented in a /hierarchically structured name space/
 
 ** Data
 
-/Complex data/, *Metadata*
+/Complex data/ & *Metadata*
 
   - (Complex = consisting of interconnected or interwoven parts, composite)
   - Physical experiments & observational data
@@ -145,28 +147,28 @@ Items are presented in a /hierarchically structured name space/
   - Values of function evaluations
   - Streams
 
-Data is captured in a /web of objects./ Links and nodes can be pre-defined or
+Data is "caught" in a /web of objects./ Links and nodes can be pre-defined or
 user-defined items.
 
 #+begin_src plantuml :file img/technical-detail.png :exports results
-    scale 1
-    card "/" as root
-    interface " " as i1a
-    interface " " as i1b
-    interface " " as i2a
-    queue " " as i2b
-    interface " " as i2c
-    collections " " as i2d
-    cloud " " as i2e
-    node " " as i3a
-    root --> i1a : "Level 1a"
-    i1a --> i2a : "Level 2a"
-    i1a --> i2b : "Level 2b"
-    i1a --> i2c #blue;line.dotted;text:blue : "Level 2c"
-    i2c --> i3a : "Level 3a"
-    i1a --> i2d : "Level 2d"
-    root --> i1b #line:red;line.bold;text:red : "Level 1b"
-    i1b --> i2e #green;line.dashed;text:green : "Level 2e"
+scale 1
+card "/" as root
+interface " " as i1a
+interface " " as i1b
+interface " " as i2a
+queue " " as i2b
+interface " " as i2c
+collections " " as i2d
+cloud " " as i2e
+node " " as i3a
+root --> i1a : "Level 1a"
+i1a --> i2a : "Level 2a"
+i1a --> i2b : "Level 2b"
+i1a --> i2c #blue;line.dotted;text:blue : "Level 2c"
+i2c --> i3a : "Level 3a"
+i1a --> i2d : "Level 2d"
+root --> i1b #line:red;line.bold;text:red : "Level 1b"
+i1b --> i2e #green;line.dashed;text:green : "Level 2e"
     #+end_src
 
 #+RESULTS:
@@ -187,7 +189,7 @@ Many different layouts exist for such /HDF5 containers/:
 
 ** (Version) 5
 
-We've tried to make all the mistakes for you!
+We've tried (in versions 1,2,3, 4) to make all the mistakes for you!
 
 * Hello, HDF5!
 
@@ -235,19 +237,7 @@ speed time series from one or more weather stations.
 
 * Data Model
 
-The HDF5 data model consists of /two primitives/ and a set of combination rules.
-
-#+begin_src plantuml :file img/hdf5-primitives.png :exports results
-scale 1.5
-folder " group "
-node " array variable "
-    #+end_src
-
-    #+RESULTS:
-    [[file:img/hdf5-primitives.png]]
-
-
-Judging from our =Hello, HDF5!= example, we are dealing with /groupings of
+Judging from our =Hello, HDF5!= example, we are dealing with /(nested) groupings of
 array(variable)s/.  There's one grouping for each weather station and there are
 two array variables (=temperature= and =wind=) per grouping. This is almost
 accurate, except that all weather station groupings are part of the so-called
@@ -255,29 +245,51 @@ accurate, except that all weather station groupings are part of the so-called
 sampling rates).
 
 #+begin_src plantuml :file img/hello-hdf5.png :exports results
-  scale 1
-  actor User #red
-  rectangle "HDF5 Container" {
-  card B [
-      / (root)
-      |_ 15
-        |_ temperature
-        |_ wind
-      |_ 20
-        |_ ...
-  ]
-  }
-  User -> B
+scale 1
+actor User #red
+rectangle "HDF5 Container" {
+card B [
+    / (root)
+    |_ 15
+      |_ temperature
+      |_ wind
+    |_ 20
+      |_ ...
+]
+}
+User -> B
   #+end_src
 
   #+RESULTS:
   [[file:img/hello-hdf5.png]]
 
-There's exactly one root group. Groups can be "nested." So-called /attributes/,
-named array variables, can decorate other groups or array variables.
-
 For the purpose of this introduction, it's OK to think of an HDF5 container as a
 /file system in a file/. (Of course, as long as there is a file...)
+
+Speaking informally, the HDF5 data model includes /two primitives/ and a set of
+combination rules. HDF5 is about describing array variables and their relationships.
+
+#+begin_src plantuml :file img/hdf5-primitives.png :exports results
+scale 1.5
+skinparam rectangle {
+    roundCorner<<Concept>> 25
+}
+
+rectangle "Grouping" <<Concept>> {
+  folder "group"
+}
+
+rectangle "Array Variable" <<Concept>> {
+  artifact " attribute "
+  node "datset"
+}
+#+end_src
+
+    #+RESULTS:
+    [[file:img/hdf5-primitives.png]]
+
+(Datasets and attributes are /roles/ in which array variables can be used in HDF5,
+and different rules apply to them.)
 
 * Ecosystem
 
