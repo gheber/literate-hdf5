@@ -1,0 +1,178 @@
+#+TITLE: Let It Be Lambda (λ)
+#+AUTHOR: Gerd Heber
+#+EMAIL: gheber@hdfgroup.org
+#+DATE: 08 January 2021
+#+STARTUP: overview
+
+#+LATEX_COMPILER: xelatex
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS: [a4paper, 12pt]
+#+LATEX_HEADER: \usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry}
+
+#+PROPERTY: header-args :eval never-export
+
+*Book recommendation:* [[https://letoverlambda.com/][Let Over Lambda—50 Years of Lisp]] by [[https://hoytech.com/about][Doug Hoyte]]
+
+* Logistics
+
+There are several ways to run the C examples contained in this and other
+documents.
+
+1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
+   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
+   knows where to find the HDF5 header files and library. If the =h5cc= compiler
+   wrapper is in your =PATH=, execute the following block:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
+
+   #+end_src
+
+   For examples involving parallel HDF5 use:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
+
+   #+end_src
+
+   and link against the MPI library.
+
+   Otherwise, you have to be more specfic. For example:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler
+         (concat "gcc --std=gnu99 "
+                 "-I/home/gerdheber/.local/include "
+                 "-L/home/gerdheber/.local/lib "))
+
+   #+end_src
+
+   You will also need to specify the libraries against which to link with a =:libs= source code block header. (See [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-C.html][C, C++, D Source Code Blocks in Org Mode]].)
+
+2. The examples' source code can be obtained by "tangling" the org file via =C-c
+   C-v t= from Emacs or from the command line by running
+
+   #+begin_example
+
+   emacs --batch --eval "(require 'org)" \
+         --eval '(org-babel-tangle-file "c-lambda.org")'
+
+   #+end_example
+
+   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
+   include and library paths for HDF5, MPI, etc.
+
+* TODO Peculiarities of Org-Mode C Code Blocks
+*  Lambda Helper
+
+We've wrapped standard headers and macros into a single header file called [[file:./src/literate-hdf5.h][literate-hdf5.h]].
+
+#+header: :main no
+#+begin_src C -r -n :tangle src/literate-hdf5.h :noweb yes :exports none
+#ifndef LITERATE_HDF5_H
+#define LITERATE_HDF5_H
+
+<<boilerplate>>
+
+#endif
+#+end_src
+
+These are the standard header files included.
+
+#+begin_src C :noweb-ref boilerplate
+
+#include "hdf5.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#+end_src
+
+The more interesting bit is the =lambda= macro by [[https://hackaday.com/2019/09/11/lambdas-for-c-sort-of/][Al Williams]].
+
+#+begin_src C -n :noweb-ref boilerplate
+
+#define lambda(lambda$_ret, lambda$_args, lambda$_body) \
+  ({                                                    \
+    lambda$_ret lambda$__anon$ lambda$_args             \
+      lambda$_body                                      \
+      &lambda$__anon$;                                  \
+  })
+
+  #+end_src
+
+It uses two features of GNU C (=--std=gnu99=), namely, [[http://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html][nested functions]] and
+[[https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html][statement expressions]], which lets us wrap C code blocks as "lambda functions",
+thereby making longer pieces of code easier to follow and digest.
+
+#+begin_example
+
+lambda(<return type>, ([type1 arg1, type2 arg2, ...]), { <lambda body>  })
+
+#+end_example
+
+Such a =lambda= can then be invoked like a C-function pointer:
+
+#+header: :flags "-I./src" :libs "-lhdf5"
+#+begin_src C -r -n :tangle src/lambda.c :exports both
+
+#include "literate-hdf5.h"
+
+int main()
+{
+  unsigned majnum, minnum, relnum;
+  H5get_libversion(&majnum, &minnum, &relnum);
+
+  printf
+    ("%f\n",
+     (*lambda(float, (float x), { return x*x; })) (majnum+minnum+relnum)
+     );
+
+  return 0;
+}
+
+#+end_src
+
+#+RESULTS:
+: 196.0
+
+* Versions
+
+This document was tested with the following software versions:
+
+#+begin_src emacs-lisp :exports both
+
+(princ (concat
+        (format "Emacs version: %s\n"
+                (emacs-version))
+        (format "org version: %s\n"
+                (org-version))))
+
+#+end_src
+
+#+RESULTS:
+: Emacs version: GNU Emacs 27.1.90 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
+:  of 2020-12-31
+: org version: 9.4.4
+
+#+begin_src sh :exports both :results output
+
+gcc --version
+
+#+end_src
+
+#+RESULTS:
+: gcc (Debian 8.3.0-6) 8.3.0
+: Copyright (C) 2018 Free Software Foundation, Inc.
+: This is free software; see the source for copying conditions.  There is NO
+: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+:
+
+* COMMENT Local Variables
+
+# Local Variables:
+# org-coderef-label-format: "// (ref:%s)"
+# End:
