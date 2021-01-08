@@ -1,0 +1,442 @@
+#+TITLE: Tracking HDF5 Free Space
+#+AUTHOR: Gerd Heber
+#+EMAIL: gheber@hdfgroup.org
+#+DATE: 07 January 2021
+#+STARTUP: overview
+
+#+LATEX_COMPILER: xelatex
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS: [a4paper, 12pt]
+#+LATEX_HEADER: \usepackage[a4paper,top=1cm,bottom=1cm,left=1cm,right=1cm]{geometry}
+
+#+PROPERTY: header-args :eval never-export
+
+
+* Introduction
+
+** Caveat Emptor
+
+The examples in this document are developed by incremental refinement. They
+are written in C in a style that we call /literate HDF5/. (See [[https://en.wikipedia.org/wiki/Literate_programming][Knuth1992]].)
+Each example is first outlined with placeholders inserted for code blocks
+developed later. That should make the program logic easy to follow, keep the
+noise-level down, and limit code repetition.
+
+This document ([[https://www.jstatsoft.org/article/view/v046i03][org file]]) is the /primary/ source for different artifacts
+such as other document formats (HTML, PDF, etc.) /and/ the actual source
+code (=*.c= files). Any change of this document will propagate
+automatically, making artifacts easy to maintain and to reproduce its
+results.
+
+This code is for illustration only. For example, no error detection or
+handling was attempted, and attentive readers will easily identify several
+corner cases that were not considered.
+
+** Syntax
+
+The basic syntactic element to denote a code block with a deferred
+implementation follows this pattern:
+
+#+begin_example
+(*
+  <<to-be-implemented>> ) (arg1, arg2, arg3, ...);
+#+end_example
+
+The syntax resembles a C function pointer, where =<<to-be-implemented>>=
+represents the code implementing the referenced function with arguments
+=arg1, arg2, arg3=, etc. Readers familiar with /lambda functions/ might find
+it convenient to think about these blocks as such. (If the examples were
+written in C++, that would be one way to go about it.)
+
+** Logistics
+
+There are several ways to run the examples contained in this document.
+
+1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
+   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
+   knows where to find the HDF5 header files and library. If the =h5cc= compiler
+   wrapper is in your =PATH=, execute the following block:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
+
+   #+end_src
+
+   Otherwise, you have to be more specfic. For example:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler
+         (concat "gcc --std=gnu99 "
+                 "-I/home/gerdheber/.local/include "
+                 "-L/home/gerdheber/.local/lib "))
+
+   #+end_src
+
+   With a parallel build of HDF5, use this:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
+
+   #+end_src
+
+   and link against the MPI library.
+
+2. The examples' source code can be obtained by "tangling" the org file via =C-c
+   C-v t= from Emacs or from the command line by running
+
+   #+begin_example
+
+   emacs --batch --eval "(require 'org)" \
+         --eval '(org-babel-tangle-file "fsm.org")'
+
+   #+end_example
+
+   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
+   include and library paths for HDF5.
+
+* The Story
+
+** Without FSM
+
+#+headers:  :libs -lhdf5 :exports both :results silent
+#+begin_src C -r -n :tangle src/fsm0.c :noweb no-export
+<<boilerplate>>
+
+int main(int argc, char** argv)
+{
+  hid_t file = (*
+                <<make-file>> ) ("no_fsm.h5"); // (ref:no-fsm-blk0)
+
+  H5Dclose((*
+            <<create-1Mi-dataset>> ) (file, "1Mi-double", H5T_IEEE_F64LE));
+  H5Dclose((*
+            <<create-1Mi-dataset>> ) (file, "1Mi-float", H5T_IEEE_F32LE));
+
+  H5Ldelete(file, "1Mi-double", H5P_DEFAULT);
+  H5Fclose(file);
+
+  file = H5Fopen("no_fsm.h5", H5F_ACC_RDWR, H5P_DEFAULT);
+  H5Dclose((*
+            <<create-1Mi-dataset>> ) (file, "1Mi-uint64", H5T_STD_U64LE));
+  H5Fclose(file);
+}
+#+end_src
+
+#+NAME: no-fsm
+#+begin_src sh :results output :exports both
+h5dump -BH no_fsm.h5
+#+end_src
+
+#+RESULTS: no-fsm
+#+begin_example
+HDF5 "no_fsm.h5" {
+SUPER_BLOCK {
+   SUPERBLOCK_VERSION 3
+   FREELIST_VERSION 0
+   SYMBOLTABLE_VERSION 0
+   OBJECTHEADER_VERSION 0
+   OFFSET_SIZE 8
+   LENGTH_SIZE 8
+   BTREE_RANK 16
+   BTREE_LEAF 4
+   ISTORE_K 32
+   FILE_SPACE_STRATEGY H5F_FSPACE_STRATEGY_FSM_AGGR
+   FREE_SPACE_PERSIST FALSE
+   FREE_SPACE_SECTION_THRESHOLD 1
+   FILE_SPACE_PAGE_SIZE 4096
+   USER_BLOCK {
+      USERBLOCK_SIZE 0
+   }
+}
+GROUP "/" {
+   DATASET "1Mi-float" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 1024, 1024 ) / ( 1024, 1024 ) }
+   }
+   DATASET "1Mi-uint64" {
+      DATATYPE  H5T_STD_U64LE
+      DATASPACE  SIMPLE { ( 1024, 1024 ) / ( 1024, 1024 ) }
+   }
+}
+}
+#+end_example
+
+** With FSM
+
+#+headers:  :libs -lhdf5 :exports both :results silent
+#+begin_src C -r -n :tangle src/fsm1.c :noweb no-export
+<<boilerplate>>
+
+int main(int argc, char** argv)
+{
+  hid_t file = (*
+                <<make-fsm-file>> ) ("fsm.h5", 1048576); // (ref:fsm-blk0)
+  H5Dclose((*
+             <<create-1Mi-dataset>> ) (file, "1Mi-double", H5T_IEEE_F64LE));
+  H5Dclose((*
+             <<create-1Mi-dataset>> ) (file, "1Mi-float", H5T_IEEE_F32LE));
+
+  H5Ldelete(file, "1Mi-double", H5P_DEFAULT);
+  H5Fclose(file);
+
+  file = H5Fopen("fsm.h5", H5F_ACC_RDWR, H5P_DEFAULT);
+  H5Dclose((*
+            <<create-1Mi-dataset>> ) (file, "1Mi-uint64", H5T_STD_U64LE));
+  H5Fclose(file);
+}
+#+end_src
+
+#+NAME: fsm
+#+begin_src sh :results output :exports both
+h5dump -BH fsm.h5
+#+end_src
+
+#+RESULTS: fsm
+#+begin_example
+HDF5 "fsm.h5" {
+SUPER_BLOCK {
+   SUPERBLOCK_VERSION 3
+   FREELIST_VERSION 0
+   SYMBOLTABLE_VERSION 0
+   OBJECTHEADER_VERSION 0
+   OFFSET_SIZE 8
+   LENGTH_SIZE 8
+   BTREE_RANK 16
+   BTREE_LEAF 4
+   ISTORE_K 32
+   FILE_SPACE_STRATEGY H5F_FSPACE_STRATEGY_PAGE
+   FREE_SPACE_PERSIST TRUE
+   FREE_SPACE_SECTION_THRESHOLD 1048576
+   FILE_SPACE_PAGE_SIZE 4096
+   USER_BLOCK {
+      USERBLOCK_SIZE 0
+   }
+}
+GROUP "/" {
+   DATASET "1Mi-float" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 1024, 1024 ) / ( 1024, 1024 ) }
+   }
+   DATASET "1Mi-uint64" {
+      DATATYPE  H5T_STD_U64LE
+      DATASPACE  SIMPLE { ( 1024, 1024 ) / ( 1024, 1024 ) }
+   }
+}
+}
+#+end_example
+
+** The difference
+
+#+begin_src sh :results output :exports both
+ls -lh *fsm.h5
+#+end_src
+
+#+RESULTS:
+: -rw------- 1 gerdheber gerdheber 13M Jan  7 19:33 fsm.h5
+: -rw------- 1 gerdheber gerdheber 21M Jan  7 19:34 no_fsm.h5
+
+#+begin_src python :var out1=no-fsm out2=fsm :results panel output :exports both
+import difflib, sys
+sys.stdout.writelines(difflib.context_diff(out1.split(), out2.split()))
+#+end_src
+
+#+RESULTS:
+: ***
+: ---
+: ***************
+: *** 1,5 ****
+:   HDF5! "no_fsm.h5"  {  SUPER_BLOCK  {--- 1,5 ----
+:   HDF5! "fsm.h5"  {  SUPER_BLOCK  {***************
+: *** 22,32 ****
+:   ISTORE_K  32  FILE_SPACE_STRATEGY! H5F_FSPACE_STRATEGY_FSM_AGGR  FREE_SPACE_PERSIST! FALSE  FREE_SPACE_SECTION_THRESHOLD! 1  FILE_SPACE_PAGE_SIZE  4096  USER_BLOCK--- 22,32 ----
+:   ISTORE_K  32  FILE_SPACE_STRATEGY! H5F_FSPACE_STRATEGY_PAGE  FREE_SPACE_PERSIST! TRUE  FREE_SPACE_SECTION_THRESHOLD! 1048576  FILE_SPACE_PAGE_SIZE  4096  USER_BLOCK
+
+** Reclaiming the gap with =h5repack=
+
+#+begin_src sh :results value :exports both
+h5repack -v no_fsm.h5 no_fsm_repacked.h5
+#+end_src
+
+#+RESULTS:
+: 0
+
+#+begin_src sh :results output :exports both
+ls -lh no_fsm*.h5
+#+end_src
+
+#+RESULTS:
+: -rw------- 1 gerdheber gerdheber 21M Jan  7 19:34 no_fsm.h5
+: -rw------- 1 gerdheber gerdheber 13M Jan  7 19:35 no_fsm_repacked.h5
+
+* Building Blocks
+
+** File creation without free-space tracking
+
+The tracking of free space in HDF5 files HDF5 1.10+. Although we do *not* enable
+free-space tracking in this building block, we configure a file access property
+list on line [[(make-file-blk0)]] to create a "vanilla" HDF5 file compatible with
+the 1.10 series of HDF5 libraries.
+
+#+begin_src C -r -n :noweb-ref make-file
+lambda(hid_t, (const char* name),
+       {
+         hid_t result;
+         hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+         H5Pset_libver_bounds(fapl, H5F_LIBVER_V110, H5F_LIBVER_LATEST); // (ref:make-file-blk0)
+
+         result = H5Fcreate(name, H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+         H5Pclose(fapl);
+
+         return result;
+       })
+#+end_src
+
+** File creation with free-space tracking enabled
+
+The tracking of free space in HDF5 files beyond ~H5Fclose~ is available only in
+HDF5 1.10+.  We configure a file access property list on line [[(make-fsm-blk1)]],
+accordingly.
+
+We enable free-space tracking by setting
+1. An appropriate file space strategy (see line [[(make-fsm-blk0)]])
+2. A threshold (in bytes) for free-space sections to be tracked (see line
+   [[(make-fsm-blk1)]])
+
+#+begin_src C -r -n :noweb-ref make-fsm-file
+lambda(hid_t, (const char* name, hsize_t threshold),
+       {
+         hid_t result;
+         hid_t fcpl = H5Pcreate(H5P_FILE_CREATE);
+         hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+         H5Pset_file_space_strategy(fcpl, H5F_FSPACE_STRATEGY_PAGE, 1, // (ref:make-fsm-blk0)
+                                    threshold);
+         H5Pset_libver_bounds(fapl, H5F_LIBVER_V110, H5F_LIBVER_LATEST); // (ref:make-fsm-blk1)
+
+         result = H5Fcreate(name, H5F_ACC_TRUNC, fcpl, fapl);
+         H5Pclose(fapl);
+         H5Pclose(fcpl);
+
+         return result;
+       })
+#+end_src
+
+** Create a 1 million element dataset
+
+#+begin_src C -r -n :noweb-ref create-1Mi-dataset
+lambda(hid_t, (hid_t file, const char* name, hid_t dtype),
+       {
+         hid_t result;
+         hid_t fspace = H5Screate_simple(2, (hsize_t[]) {1024, 1024}, NULL);
+         hid_t lcpl = H5Pcreate(H5P_LINK_CREATE);
+         hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
+
+         H5Pset_create_intermediate_group(lcpl, 1);
+         H5Pset_alloc_time(dcpl, H5D_ALLOC_TIME_EARLY);
+
+         result = H5Dcreate(file, name, dtype, fspace, lcpl, dcpl,
+                            H5P_DEFAULT);
+         H5Pclose(dcpl);
+         H5Pclose(lcpl);
+         H5Sclose(fspace);
+
+         return result;
+       })
+#+end_src
+
+* Appendix
+
+** Versions
+This document was tested with the following software versions:
+
+#+begin_src emacs-lisp :exports both
+
+(princ (concat
+        (format "Emacs version: %s\n"
+                (emacs-version))
+        (format "org version: %s\n"
+                (org-version))))
+
+#+end_src
+
+#+RESULTS:
+: Emacs version: GNU Emacs 27.1.90 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
+:  of 2020-12-31
+: org version: 9.4.4
+
+#+begin_src sh :exports both :results output
+
+gcc --version
+
+#+end_src
+
+#+RESULTS:
+: gcc (Debian 8.3.0-6) 8.3.0
+: Copyright (C) 2018 Free Software Foundation, Inc.
+: This is free software; see the source for copying conditions.  There is NO
+: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+:
+
+** Boilerplate with a twist
+
+These are the header files needed to build the examples.
+
+#+begin_src C :noweb-ref boilerplate
+
+#include "hdf5.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#+end_src
+
+The more interesting bit is the =lambda= macro by [[https://hackaday.com/2019/09/11/lambdas-for-c-sort-of/][Al Williams]].
+
+#+begin_src C -n :noweb-ref boilerplate
+
+#define lambda(lambda$_ret, lambda$_args, lambda$_body) \
+  ({                                                    \
+    lambda$_ret lambda$__anon$ lambda$_args             \
+      lambda$_body                                      \
+      &lambda$__anon$;                                  \
+  })
+
+#+end_src
+
+It uses two features of GNU C (=--std=gnu99=), namely, [[http://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html][nested functions]] and
+[[https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html][statement expressions]], which lets us wrap C code blocks as "lambda functions",
+thereby making longer pieces of code easier to follow and digest.
+
+#+begin_example
+
+lambda(<return type>, ([type1 arg1, type2 arg2, ...]), { <lambda body>  })
+
+#+end_example
+
+Such a =lambda= can then be invoked like a C-function pointer:
+
+#+begin_src C -n :tangle src/lambda.c :exports both
+
+#define lambda(lambda$_ret, lambda$_args, lambda$_body) \
+  ({                                                    \
+    lambda$_ret lambda$__anon$ lambda$_args             \
+      lambda$_body                                      \
+      &lambda$__anon$;                                  \
+  })
+
+int main()
+{
+  printf("%f\n",(*lambda(float, (float x), { return x*x; }))(2.0));
+  return 0;
+}
+
+#+end_src
+
+#+RESULTS:
+: 4.0
+
+# Local Variables:
+# org-coderef-label-format: "// (ref:%s)"
+# End:
