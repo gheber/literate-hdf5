@@ -2,6 +2,7 @@
 #+AUTHOR: Gerd Heber
 #+EMAIL: gheber@hdfgroup.org
 #+DATE: 17 December 2020
+#+STARTUP: overview
 
 #+HTML_HEAD_EXTRA: <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700,400italic,700italic&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
 #+HTML_HEAD_EXTRA: <link href='http://fonts.googleapis.com/css?family=Source+Code+Pro:400,700' rel='stylesheet' type='text/css'>
@@ -85,63 +86,24 @@ represents the code implementing the referenced function with arguments
 it convenient to think about these blocks as such. (If the examples were
 written in C++, that would be one way to go about it.)
 
-** Logistics
-
-There are several ways to run the examples contained in this document.
-
-1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions
-   directly via =C-c C-c,= provided the HDF5 library is in their
-   =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]] knows where to find the HDF5 header files and
-   library. If the =h5cc= compiler wrapper is in your =PATH=, execute the
-   following block:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
-
-   #+end_src
-
-   Otherwise, you have to be more specfic. For example:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler
-         (concat "gcc --std=gnu99 "
-                 "-I/home/gerdheber/.local/include "
-                 "-L/home/gerdheber/.local/lib "))
-
-   #+end_src
-
-2. The examples' source code can be obtained by "tangling" the org file via
-   =C-c C-v t= from Emacs or from the command line by running
-
-   #+begin_example
-
-   emacs --batch --eval "(require 'org)" \
-         --eval '(org-babel-tangle-file "core-vfd.org")'
-
-   #+end_example
-
-   The code can then be compiled with =gcc --std=gnu99 ...= and the
-   appropriate include and library paths for HDF5.
 
 * Basic Use  <<sec:basic-use>>
 
 The HDF5 library supports an in-memory, aka. in-/core/, representation of HDF5
-files, which should not to be confused with [[https://en.wikipedia.org/wiki/Memory-mapped_file][memory-mapped files]]. Unlike files
-in a file system, which are represented by inodes and ultimately blocks on a
-block device, memory-backed HDF5 files are just contiguous memory regions
-("buffers") formatted according to the [[https://portal.hdfgroup.org/display/HDF5/File+Format+Specification][HDF5 file format specification]]. Since
-they /are/ HDF5 files, the API for such "files" is identical to the one for
-"regular" (=on-disk) HDF5 files.
+files, which should not to be confused with [[https://en.wikipedia.org/wiki/Memory-mapped_file][memory-mapped files]]. Unlike files in
+a file system, which are represented by inodes and ultimately blocks on a block
+device, memory-backed HDF5 files are just contiguous memory regions ("buffers")
+formatted according to the [[https://portal.hdfgroup.org/display/HDF5/File+Format+Specification][HDF5 file format specification]]. Since they /are/ HDF5
+files, the API for such "files" is identical to the one for "regular" (=on-disk)
+HDF5 files.
 
-The purpose of the first example is to show that working with memory-backed
-HDF5 files is as straightforward as working with HDF5 files in a file system.
+The purpose of the first example is to show that working with memory-backed HDF5
+files is as straightforward as working with HDF5 files in a file system.
 
 ** Goal
 
-/We would like to write an array of integers to a 2D dataset in a
-memory-backed HDF5 file./
+/We would like to write an array of integers to a 2D dataset in a memory-backed
+HDF5 file./
 
 Before we look at memory-backed HDF5 files, let's recap the steps for
 ordinary HDF5 files!
@@ -158,39 +120,36 @@ Given our important array =data=, we:
    **Note:** The paragraph following the outline shows the actual program
    output.
 
-   #+headers:  :libs -lhdf5 :exports both :results output
-   #+begin_src C -r -n :tangle src/core-vfd0.c :noweb no-export
+#+headers: :flags "-I./src" :libs -lhdf5 :exports both :results output
+#+begin_src C -r -n :tangle src/core-vfd0.c :noweb no-export
 
-   <<boilerplate>> // (ref:vfd0-boiler)
+#include "literate-hdf5.h"
 
-   int main(int argc, char** argv)
-   {
-     int data[] = {0, 1, 2, 3, 4, 5};
-     hid_t file = (*
-                   <<make-disk-file>> ) ("disk.h5"); // (ref:vfd0-blk0)
-     hid_t dset = (*
-                   <<make-2D-dataset>> ) (file, "2x3", H5T_STD_I32LE, // (ref:vfd0-blk1)
-                                          (hsize_t[]){2,3}, data);
-     H5Dclose(dset);
+int main(int argc, char** argv)
+{
+  int data[] = {0, 1, 2, 3, 4, 5};
+  hid_t file = (*
+                <<make-disk-file>> ) ("disk.h5"); // (ref:vfd0-blk0)
+  hid_t dset = (*
+                <<make-2D-dataset>> ) (file, "2x3", H5T_STD_I32LE, // (ref:vfd0-blk1)
+                                       (hsize_t[]){2,3}, data);
+  H5Dclose(dset);
 
-     (*
-      <<print-lib-version>> ) ();
-     (*
-      <<print-file-size>> ) (file);
+  (*
+   <<print-lib-version>> ) ();
+  (*
+   <<print-file-size>> ) (file);
 
-     H5Fclose(file);
+  H5Fclose(file);
 
-     return 0;
-   }
+  return 0;
+}
 
    #+end_src
 
    #+RESULTS:
    : HDF5 library version 1.13.0
    : File size: 4096 bytes
-
-   The =<<boilerplate>>= block on line [[(vfd0-boiler)]] has the usual =include=
-   directives and is provided in the [[Boilerplate with a twist][appendix]].
 
    The =<<make-disk-file>>= block (line [[(vfd0-blk0)]]) is merely a call to
    =H5Fcreate= (see section [[sec:disk-file-creation]]) and the
@@ -209,10 +168,10 @@ Any argument passed to the executable will be interpreted as =TRUE= and the
 file persisted. By default (no arguments), there won't be a =core.h5= file
 after running the program.
 
-#+headers:  :libs -lhdf5 :exports both :results output
+#+headers: :flags "-I./src" :libs -lhdf5 :exports both :results output
 #+begin_src C -r -n :tangle src/core-vfd1.c :noweb no-export
 
-<<boilerplate>>
+#include "literate-hdf5.h"
 
 int main(int argc, char** argv)
 {
@@ -288,10 +247,10 @@ other in a file system. We re-use the file creation building blocks (lines
 copying HDF5 objects between HDF5 files. All we have to do is call it on line
 [[(copy-call)]].
 
-#+headers:  :libs -lhdf5 :exports both :results output
+#+headers: :flags "-I./src"  :libs -lhdf5 :exports both :results output
 #+begin_src C -r -n :tangle src/core-vfd2.c :noweb no-export
 
-<<boilerplate>>
+#include "literate-hdf5.h"
 
 int main(int argc, char** argv)
 {
@@ -355,22 +314,21 @@ postponed or delayed until a better informed decision can be made.
 
 As stated earlier, when creating new objects, the HDF5 library needs certain
 information (e.g., creation properties) which stays with an object throughout
-its lifetime and which is immutable. The copy approach from the previous
-example won't work, because it preserves HDF5 objects' creation properties.
-Still, a memory-backed HDF5 "shadow" file can be used effectively alongside
-other HDF5 files as a holding area for objects whose final whereabouts are
-uncertain at object creation time.
+its lifetime and which is immutable. The copy approach from the previous example
+won't work, because it preserves HDF5 objects' creation properties.  Still, a
+memory-backed HDF5 "shadow" file can be used effectively alongside other HDF5
+files as a holding area for objects whose final whereabouts are uncertain at
+object creation time.
 
 ** Goal
 
-/We would like to maintain a potentially very large 2D dataset in a
-memory-backed HDF5 file and eventually persist it to an HDF5 file in a file
-system./
+/We would like to maintain a potentially very large 2D dataset in a memory-backed
+HDF5 file and eventually persist it to an HDF5 file in a file system./
 
 ** Outline
 
-There are a few new snippets in this example. The =<<make-big-2D-dataset>>=
-block on line [[(big-dset)]] appears identical to =<<make-2D-dataset>>=, but the
+There are a few new snippets in this example. The =<<make-big-2D-dataset>>= block
+on line [[(big-dset)]] appears identical to =<<make-2D-dataset>>=, but the
 implementation in section [[sec:big-dataset-creation]] shows that we are dealing
 with a datset of potentially arbitrary extent, using chunked storage layout.
 
@@ -381,14 +339,14 @@ extent during an application's lifetime by growing and shrinking it using
 On line [[(size-check)]], we check its size once more (see section
 [[sec:dataset-size]]). If the size doesn't exceed 60,000 bytes, we optimize its
 persisted representation by using the so-called compact storage layout (line
-[[(compact)]] and section [[sec:compact-replica]]). In this case we need to transfer
-the data manually (line [[(data-xfer)]] and section [[sec:dataset-xfer]]).  Otherwise,
-we fall back onto =H5Ocopy= (line [[(big-copy)]]).
+[[(compact)]] and section [[sec:compact-replica]]). In this case we need to transfer the
+data manually (line [[(data-xfer)]] and section [[sec:dataset-xfer]]).  Otherwise, we
+fall back onto =H5Ocopy= (line [[(big-copy)]]).
 
-#+headers:  :libs -lhdf5 :exports both :results output
+#+headers: :flags "-I./src" :libs -lhdf5 :exports both :results output
 #+begin_src C -r -n :tangle src/core-vfd3.c :noweb no-export
 
-<<boilerplate>>
+#include "literate-hdf5.h"
 
 int main(int argc, char** argv)
 {
@@ -624,7 +582,7 @@ The same warning and assumptions expressed at the end of section
 This =lambda= returns the size (in bytes) of the source dataset in the
 memory-backed HDF5 file. It's a matter of determining the storage size of an
 individual dataset element and counting how many there are (lines [[(size-calc1)]],
-[[(size-calc2)]])
+[[(Size-calc2)]])
 
 #+begin_src C -r -n :noweb-ref dataset-size
 
@@ -728,7 +686,48 @@ lambda(void, (hid_t src, hid_t dst),
 
 * Appendix
 
+** Logistics
+
+There are several ways to run the examples contained in this document.
+
+1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
+   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
+   knows where to find the HDF5 header files and library. If the =h5cc= compiler
+   wrapper is in your =PATH=, execute the following block:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
+
+   #+end_src
+
+   Otherwise, you have to be more specfic. For example:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler
+         (concat "gcc --std=gnu99 "
+                 "-I/home/gerdheber/.local/include "
+                 "-L/home/gerdheber/.local/lib "))
+
+   #+end_src
+
+2. The examples' source code can be obtained by "tangling" the org file via =C-c
+   C-v t= from Emacs or from the command line by running
+
+   #+begin_example
+
+   emacs --batch --eval "(require 'org)" \
+         --eval '(org-babel-tangle-file "core-vfd.org")'
+
+   #+end_example
+
+   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
+   include and library paths for HDF5.
+
+
 ** Versions
+
 This document was tested with the following software versions:
 
 #+begin_src emacs-lisp :exports both
@@ -742,9 +741,9 @@ This document was tested with the following software versions:
 #+end_src
 
 #+RESULTS:
-: Emacs version: GNU Emacs 26.1 (build 2, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
-:  of 2019-09-22, modified by Debian
-: org version: 9.1.9
+: Emacs version: GNU Emacs 27.1.90 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
+:  of 2020-12-31
+: org version: 9.4.4
 
 #+begin_src sh :exports both :results output
 
@@ -759,63 +758,6 @@ gcc --version
 : warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 :
 
-** Boilerplate with a twist
-
-These are the header files needed to build the examples.
-
-#+begin_src C :noweb-ref boilerplate
-
-#include "hdf5.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#+end_src
-
-The more interesting bit is the =lambda= macro by [[https://hackaday.com/2019/09/11/lambdas-for-c-sort-of/][Al Williams]].
-
-#+begin_src C -n :noweb-ref boilerplate
-
-#define lambda(lambda$_ret, lambda$_args, lambda$_body) \
-  ({                                                    \
-    lambda$_ret lambda$__anon$ lambda$_args             \
-      lambda$_body                                      \
-      &lambda$__anon$;                                  \
-  })
-
-#+end_src
-
-It uses two features of GNU C (=--std=gnu99=), namely, [[http://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html][nested functions]] and
-[[https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html][statement expressions]], which lets us wrap C code blocks as "lambda functions",
-thereby making longer pieces of code easier to follow and digest.
-
-#+begin_example
-
-lambda(<return type>, ([type1 arg1, type2 arg2, ...]), { <lambda body>  })
-
-#+end_example
-
-Such a =lambda= can then be invoked like a C-function pointer:
-
-#+begin_src C -n :tangle src/lambda.c :exports both
-
-#define lambda(lambda$_ret, lambda$_args, lambda$_body) \
-  ({                                                    \
-    lambda$_ret lambda$__anon$ lambda$_args             \
-      lambda$_body                                      \
-      &lambda$__anon$;                                  \
-  })
-
-int main()
-{
-  printf("%f\n",(*lambda(float, (float x), { return x*x; }))(2.0));
-  return 0;
-}
-
-#+end_src
-
-#+RESULTS:
-: 4.0
 
 # Local Variables:
 # org-coderef-label-format: "// (ref:%s)"

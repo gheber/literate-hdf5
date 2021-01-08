@@ -12,98 +12,16 @@
 #+PROPERTY: header-args :eval never-export
 
 
-* Introduction
-
-** Caveat Emptor
-
-The examples in this document are developed by incremental refinement. They
-are written in C in a style that we call /literate HDF5/. (See [[https://en.wikipedia.org/wiki/Literate_programming][Knuth1992]].)
-Each example is first outlined with placeholders inserted for code blocks
-developed later. That should make the program logic easy to follow, keep the
-noise-level down, and limit code repetition.
-
-This document ([[https://www.jstatsoft.org/article/view/v046i03][org file]]) is the /primary/ source for different artifacts
-such as other document formats (HTML, PDF, etc.) /and/ the actual source
-code (=*.c= files). Any change of this document will propagate
-automatically, making artifacts easy to maintain and to reproduce its
-results.
-
-This code is for illustration only. For example, no error detection or
-handling was attempted, and attentive readers will easily identify several
-corner cases that were not considered.
-
-** Syntax
-
-The basic syntactic element to denote a code block with a deferred
-implementation follows this pattern:
-
-#+begin_example
-(*
-  <<to-be-implemented>> ) (arg1, arg2, arg3, ...);
-#+end_example
-
-The syntax resembles a C function pointer, where =<<to-be-implemented>>=
-represents the code implementing the referenced function with arguments
-=arg1, arg2, arg3=, etc. Readers familiar with /lambda functions/ might find
-it convenient to think about these blocks as such. (If the examples were
-written in C++, that would be one way to go about it.)
-
-** Logistics
-
-There are several ways to run the examples contained in this document.
-
-1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
-   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
-   knows where to find the HDF5 header files and library. If the =h5cc= compiler
-   wrapper is in your =PATH=, execute the following block:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
-
-   #+end_src
-
-   Otherwise, you have to be more specfic. For example:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler
-         (concat "gcc --std=gnu99 "
-                 "-I/home/gerdheber/.local/include "
-                 "-L/home/gerdheber/.local/lib "))
-
-   #+end_src
-
-   With a parallel build of HDF5, use this:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
-
-   #+end_src
-
-   and link against the MPI library.
-
-2. The examples' source code can be obtained by "tangling" the org file via =C-c
-   C-v t= from Emacs or from the command line by running
-
-   #+begin_example
-
-   emacs --batch --eval "(require 'org)" \
-         --eval '(org-babel-tangle-file "fsm.org")'
-
-   #+end_example
-
-   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
-   include and library paths for HDF5.
+* TODO Introduction
 
 * The Story
 
 ** Without FSM
 
-#+headers:  :libs -lhdf5 :exports both :results silent
+#+headers: :flags "-I./src" :libs -lhdf5 :exports both :results silent
 #+begin_src C -r -n :tangle src/fsm0.c :noweb no-export
-<<boilerplate>>
+
+#include "literate-hdf5.h"
 
 int main(int argc, char** argv)
 {
@@ -166,9 +84,10 @@ GROUP "/" {
 
 ** With FSM
 
-#+headers:  :libs -lhdf5 :exports both :results silent
+#+headers: :flags "-I./src"  :libs -lhdf5 :exports both :results silent
 #+begin_src C -r -n :tangle src/fsm1.c :noweb no-export
-<<boilerplate>>
+
+#include "literate-hdf5.h"
 
 int main(int argc, char** argv)
 {
@@ -187,6 +106,7 @@ int main(int argc, char** argv)
             <<create-1Mi-dataset>> ) (file, "1Mi-uint64", H5T_STD_U64LE));
   H5Fclose(file);
 }
+
 #+end_src
 
 #+NAME: fsm
@@ -235,8 +155,8 @@ ls -lh *fsm.h5
 #+end_src
 
 #+RESULTS:
-: -rw------- 1 gerdheber gerdheber 13M Jan  7 19:33 fsm.h5
-: -rw------- 1 gerdheber gerdheber 21M Jan  7 19:34 no_fsm.h5
+: -rw------- 1 gerdheber gerdheber 13M Jan  8 15:54 fsm.h5
+: -rw------- 1 gerdheber gerdheber 21M Jan  8 15:55 no_fsm.h5
 
 #+begin_src python :var out1=no-fsm out2=fsm :results panel output :exports both
 import difflib, sys
@@ -268,8 +188,8 @@ ls -lh no_fsm*.h5
 #+end_src
 
 #+RESULTS:
-: -rw------- 1 gerdheber gerdheber 21M Jan  7 19:34 no_fsm.h5
-: -rw------- 1 gerdheber gerdheber 13M Jan  7 19:35 no_fsm_repacked.h5
+: -rw------- 1 gerdheber gerdheber 21M Jan  8 15:55 no_fsm.h5
+: -rw------- 1 gerdheber gerdheber 13M Jan  8 15:59 no_fsm_repacked.h5
 
 * Building Blocks
 
@@ -348,6 +268,55 @@ lambda(hid_t, (hid_t file, const char* name, hid_t dtype),
 
 * Appendix
 
+** Logistics
+
+There are several ways to run the examples contained in this document.
+
+1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
+   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
+   knows where to find the HDF5 header files and library. If the =h5cc= compiler
+   wrapper is in your =PATH=, execute the following block:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
+
+   #+end_src
+
+   Otherwise, you have to be more specfic. For example:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler
+         (concat "gcc --std=gnu99 "
+                 "-I/home/gerdheber/.local/include "
+                 "-L/home/gerdheber/.local/lib "))
+
+   #+end_src
+
+   With a parallel build of HDF5, use this:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
+
+   #+end_src
+
+   and link against the MPI library.
+
+2. The examples' source code can be obtained by "tangling" the org file via =C-c
+   C-v t= from Emacs or from the command line by running
+
+   #+begin_example
+
+   emacs --batch --eval "(require 'org)" \
+         --eval '(org-babel-tangle-file "fsm.org")'
+
+   #+end_example
+
+   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
+   include and library paths for HDF5.
+
 ** Versions
 This document was tested with the following software versions:
 
@@ -378,64 +347,6 @@ gcc --version
 : This is free software; see the source for copying conditions.  There is NO
 : warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 :
-
-** Boilerplate with a twist
-
-These are the header files needed to build the examples.
-
-#+begin_src C :noweb-ref boilerplate
-
-#include "hdf5.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-
-#+end_src
-
-The more interesting bit is the =lambda= macro by [[https://hackaday.com/2019/09/11/lambdas-for-c-sort-of/][Al Williams]].
-
-#+begin_src C -n :noweb-ref boilerplate
-
-#define lambda(lambda$_ret, lambda$_args, lambda$_body) \
-  ({                                                    \
-    lambda$_ret lambda$__anon$ lambda$_args             \
-      lambda$_body                                      \
-      &lambda$__anon$;                                  \
-  })
-
-#+end_src
-
-It uses two features of GNU C (=--std=gnu99=), namely, [[http://gcc.gnu.org/onlinedocs/gcc/Nested-Functions.html][nested functions]] and
-[[https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html][statement expressions]], which lets us wrap C code blocks as "lambda functions",
-thereby making longer pieces of code easier to follow and digest.
-
-#+begin_example
-
-lambda(<return type>, ([type1 arg1, type2 arg2, ...]), { <lambda body>  })
-
-#+end_example
-
-Such a =lambda= can then be invoked like a C-function pointer:
-
-#+begin_src C -n :tangle src/lambda.c :exports both
-
-#define lambda(lambda$_ret, lambda$_args, lambda$_body) \
-  ({                                                    \
-    lambda$_ret lambda$__anon$ lambda$_args             \
-      lambda$_body                                      \
-      &lambda$__anon$;                                  \
-  })
-
-int main()
-{
-  printf("%f\n",(*lambda(float, (float x), { return x*x; }))(2.0));
-  return 0;
-}
-
-#+end_src
-
-#+RESULTS:
-: 4.0
 
 # Local Variables:
 # org-coderef-label-format: "// (ref:%s)"
