@@ -308,8 +308,8 @@ and different rules apply to them.)
 - It's hard to find a language for which there are no HDF5 bindings or an API
 - The HDF Group develops and maintains a reference implementation in C and
   bindings for Fortran
-- The community provides excellent, in some cases several, bindings for Python,
-  R, C++, Julia, .NET, Java...
+- The community provides excellent bindings for Python, R, C++, Julia, .NET,
+  Java...
 - Third parties support HDF5 in their products, e.g., MathWorks, National
   Instruments, Wolfram, etc.
 
@@ -343,7 +343,8 @@ int main(int argc, char** argv)
   float* buffer;
 
   fapl = H5Pcreate(H5P_FILE_ACCESS);
-  file = H5Fcreate("single-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+  file = H5Fcreate("single-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT,
+                   fapl);
   H5Pclose(fapl);
 
   dset = (*
@@ -377,7 +378,8 @@ int main(int argc, char** argv)
 
     fapl = H5Pcreate(H5P_FILE_ACCESS);
     H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL);
-    file = H5Fcreate("multi-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+    file = H5Fcreate("multi-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT,
+                     fapl);
     H5Pclose(fapl);
 
     dset = (*
@@ -410,7 +412,8 @@ MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 lambda(hid_t, (hid_t file, const char* name, hsize_t elt_count),
        {
          hid_t result;
-         hid_t fspace = H5Screate_simple(1, (hsize_t[]) { elt_count }, NULL);
+         hid_t fspace = H5Screate_simple(1, (hsize_t[]) { elt_count },
+                                         NULL);
          result = H5Dcreate(file, name, H5T_IEEE_F32LE, fspace,
                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
          H5Sclose(fspace);
