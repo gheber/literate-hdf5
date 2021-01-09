@@ -56,10 +56,19 @@ BackgroundColor lightgreen
 
 * The HDF Group
 
-** TODO Values
-*** TODO FOSS
-** TODO Mission
-** TODO Services
+Non-profit company on a mission:
+
+#+begin_quote
+/To make the management of large & complex data as simple as possible, but no
+simpler./
+#+end_quote
+
+*Our values:*
+
+- Simple data model
+- Free Open Source Software
+- Technical excellence
+- Diverse community
 
 * The HDF Community
 
@@ -267,7 +276,8 @@ For the purpose of this introduction, it's OK to think of an HDF5 container as a
 /file system in a file/. (Of course, as long as there is a file...)
 
 Speaking informally, the HDF5 data model includes /two primitives/ and a set of
-combination rules. HDF5 is about describing array variables and their relationships.
+combination rules. HDF5 is about describing array variables and their
+relationships.
 
 #+begin_src plantuml :file img/hdf5-primitives.png :exports results
 scale 1.5
@@ -275,13 +285,13 @@ skinparam rectangle {
     roundCorner<<Concept>> 25
 }
 
-rectangle "Grouping" <<Concept>> {
-  folder "group"
-}
-
 rectangle "Array Variable" <<Concept>> {
   artifact " attribute "
   node "datset"
+}
+
+rectangle "Grouping" <<Concept>> {
+  folder "group"
 }
 #+end_src
 
@@ -293,8 +303,15 @@ and different rules apply to them.)
 
 * Ecosystem
 
-** TODO Language bindings
-Python, R, C++, Julia, ...
+** Language bindings
+
+- It's hard to find a language for which there are no HDF5 bindings or an API
+- The HDF Group develops and maintains a reference implementation in C and
+  bindings for Fortran
+- The community provides excellent, in some cases several, bindings for Python,
+  R, C++, Julia, .NET, Java...
+- Third parties support HDF5 in their products, e.g., MathWorks, National
+  Instruments, Wolfram, etc.
 
 ** IoT / Edge
 
@@ -311,9 +328,128 @@ your computer!
 
  Turning a sequential program into an MPI-parallel program
 
-*** TODO A single process writing to a single file
+*** A single process writing to a single file
 
-*** TODO Multiple MPI processes writing to a single dataset in a shared file
+#+headers: :flags "-I./src" :libs -lhdf5 :exports both :results silent
+#+begin_src C -r -n :tangle src/hdf5-101.c :noweb no-export
+
+#include "literate-hdf5.h"
+
+#define SIZE 1024*1024
+
+int main(int argc, char** argv)
+{
+  hid_t fapl, file, dset, file_space, mem_space;
+  float* buffer;
+
+  fapl = H5Pcreate(H5P_FILE_ACCESS);
+  file = H5Fcreate("single-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+  H5Pclose(fapl);
+
+  dset = (*
+          <<make-dataset>>) (file, "1Mi-floats", SIZE);
+  file_space = H5Dget_space(dset);
+  H5Sselect_all(file_space);
+
+  <<create-buffer-and-write>>
+  <<clean-up>>
+}
+
+#+end_src
+
+*** Multiple MPI processes writing to a single dataset in a shared file
+
+#+headers: :flags "-I./src" :libs -lhdf5 -lmpi
+#+begin_src C -r -n :tangle src/phdf5-101.c :noweb no-export :exports both :results silent
+
+#include "literate-hdf5.h"
+
+#define SIZE 1024*1024
+
+int main(int argc, char** argv)
+{
+  int size, rank;
+  <<mpi-boilerplate>>
+
+  {
+    hid_t fapl, file, dset, file_space, mem_space;
+    float* buffer;
+
+    fapl = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL);
+    file = H5Fcreate("multi-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT, fapl);
+    H5Pclose(fapl);
+
+    dset = (*
+            <<make-dataset>>) (file, "xMi-floats", size*SIZE);
+    file_space = H5Dget_space(dset);
+    (*
+     <<make-file-space-selection>>) (file_space, rank, size, SIZE);
+
+    <<create-buffer-and-write>>
+    <<clean-up>>
+  }
+
+  MPI_Finalize();
+}
+
+#+end_src
+
+*** Boilerplate and common code
+
+#+begin_src C -r -n :noweb-ref mpi-boilerplate
+
+MPI_Init(&argc, &argv)
+MPI_Comm_rank(MPI_COMM_WORLD, &size);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+#+end_src
+
+#+begin_src C :noweb-ref make-dataset
+
+lambda(hid_t, (hid_t file, const char* name, hsize_t elt_count),
+       {
+         hid_t result;
+         hid_t fspace = H5Screate_simple(1, (hsize_t[]) { elt_count }, NULL);
+         result = H5Dcreate(file, name, H5T_IEEE_F32LE, fspace,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+         H5Sclose(fspace);
+         return result;
+       })
+
+#+end_src
+
+#+begin_src C :noweb-ref make-file-space-dataset
+
+lambda(void, (hid_t fspace, int rank, int size, hsize_t my_count),
+       {
+         return;
+       })
+
+#+end_src
+
+#+begin_src C :noweb-ref create-buffer-and-write
+
+buffer = (float*) malloc(SIZE*sizeof(float));
+mem_space = H5Screate_simple(1, (hsize_t[]) { SIZE }, NULL);
+H5Sselect_all(mem_space);
+
+/* Do something interesting with buffer! */
+
+H5Dwrite(dset, H5T_NATIVE_FLOAT, mem_space, file_space, H5P_DEFAULT,
+         buffer);
+
+#+end_src
+
+#+begin_src C :noweb-ref clean-up
+
+free(buffer);
+H5Sclose(mem_space);
+H5Sclose(file_space);
+H5Dclose(dset);
+H5Fclose(file);
+
+#+end_src
 
 ** Cloud
 
