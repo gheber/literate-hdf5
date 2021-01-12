@@ -194,7 +194,7 @@ Many different layouts exist for such /HDF5 containers/:
 - Collection of objects in [[https://www.intel.com/content/www/us/en/high-performance-computing/daos-high-performance-storage-brief.html][Intel DAOS]] or [[https://aws.amazon.com/s3/][Amazon S3]]
 - ...
 
-(And you can create your own layouts!)
+And you can create your own layouts!
 
 ** (Version) 5
 
@@ -210,7 +210,7 @@ The introduction to [[https://g.co/kgs/dZehBL][Andrew Collette's]] [[https://www
 
 begins with an intuitive example:
 
-#+begin_src python :exports both :tangle "src/weather_station.py" :results output
+#+begin_src python -n :exports both :tangle "src/weather_station.py" :results output
 
 import h5py, numpy as np, platform as pfm
 
@@ -246,12 +246,11 @@ speed time series from one or more weather stations.
 
 * Data Model
 
-Judging from our =Hello, HDF5!= example, we are dealing with /(nested) groupings of
-array(variable)s/.  There's one grouping for each weather station and there are
-two array variables (=temperature= and =wind=) per grouping. This is almost
-accurate, except that all weather station groupings are part of the so-called
-/root group/, and that there are additional decorations (system characteristics,
-sampling rates).
+Judging from our =Hello, HDF5!= example, we are dealing with nested /groupings of
+arrays/.  There's one grouping for each weather station and there are two array
+variables (=temperature= and =wind=) per grouping. This is almost accurate, except
+that all weather station groupings are part of the so-called /root group/, and
+that there are additional decorations (system characteristics, sampling rates).
 
 #+begin_src plantuml :file img/hello-hdf5.png :exports results
 scale 1
@@ -315,7 +314,8 @@ and different rules apply to them.)
 
 ** IoT / Edge
 
-Download a fully featured Python 3 IDE to your mobile device from the [[https://play.google.com/store/apps/details?id=ru.iiec.pydroid3][Google Play store]].
+Download a fully featured Python 3 IDE to your mobile device from the [[https://play.google.com/store/apps/details?id=ru.iiec.pydroid3][Google
+Play store]].
 
 #+ATTR_HTML: :width 480px
 #+ATTR_LATEX: :width 480px
@@ -324,35 +324,45 @@ Download a fully featured Python 3 IDE to your mobile device from the [[https://
 *Homework:* Run the ="Hello, HDF5!"= example on your phone and look at the file on
 your computer!
 
-** HPC
+** HPC (aka. Parallel HDF5) <<sec:hpc>>
 
- Turning a sequential program into an MPI-parallel program
+ Below we illustrate how to transition from a single process writing to a
+ dataset to multiple MPI-processes writing to different parts of a single
+ dataset in a single shared HDF5 file. The code is written to emphasize
+ similarities and to highlight the few places where they differ. The common
+ portions are shown in the [[sec:boilerplate][appendix]].
 
-*** A single process writing to a single file
+*** A single process writing to a single dataset
 
-#+headers: :flags "-I./src" :libs -lhdf5 :exports both :results silent
-#+begin_src C -r -n :tangle src/hdf5-101.c :noweb no-export
+The basic flow is as follows:
+1. Create an HDF5 file (line [[(seq-fcrt)]])
+2. Create an HDF5 dataset (line [[(seq-dcrt)]])
+3. Select the destination in the file (line [[(seq-sel)]])
+4. Write a data buffer  (line [[(seq-wrt)]])
+
+#+headers: :flags "-I./src" :libs -lhdf5 :exports code
+#+begin_src C -r -n :tangle src/hdf5-101.c :noweb no-export :results silent
 
 #include "literate-hdf5.h"
-
 #define SIZE 1024*1024
 
 int main(int argc, char** argv)
 {
   hid_t fapl, file, dset, file_space, mem_space;
   float* buffer;
+  hsize_t file_size;
 
   fapl = H5Pcreate(H5P_FILE_ACCESS);
   file = H5Fcreate("single-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT,
-                   fapl);
-  H5Pclose(fapl);
+                   fapl); // (ref:seq-fcrt)
 
   dset = (*
-          <<make-dataset>>) (file, "1Mi-floats", SIZE);
+          <<make-dataset>>) (file, "1Mi-floats", SIZE); // (ref:seq-dcrt)
   file_space = H5Dget_space(dset);
-  H5Sselect_all(file_space);
+  H5Sselect_all(file_space);  // (ref:seq-sel)
 
-  <<create-buffer-and-write>>
+  <<create-buffer-and-write>> // (ref:seq-wrt)
+
   <<clean-up>>
 }
 
@@ -360,11 +370,37 @@ int main(int argc, char** argv)
 
 *** Multiple MPI processes writing to a single dataset in a shared file
 
+The basic flow is exactly the same as in the sequential case:
+1. Create an HDF5 file (line [[(par-fcrt)]])
+2. Create an HDF5 dataset (line [[(par-dcrt)]])
+3. Select the destination in the file (lines [[(par-sel1)]] - [[(par-sel2)]])
+4. Write a data buffer  (line [[(par-wrt)]])
+
+There are only two differences between the sequential case and the MPI-parallel
+case:
+1. We have to instruct the HDF5 library to use MPI-IO layer (line [[(par-fapl)]])
+2. Since the data buffers from different MPI ranks are destined for different
+   "offsets" in the dataset, the selection process is rank dependent (lines
+   [[(par-sel1)]] - [[(par-sel2)]])
+
+/That's it./ Everything else is the same. Most importantly:
+
+#+begin_quote
+*The is only _one_ HDF5 file format.*
+#+end_quote
+
+It is impossible to tell if a given HDF5 file was created by a sequential or
+parallel application.
+
+Notice that the example is a case of /weak scaling/: each process writes the same
+amount of data, and the total amount of data written is proportional to the
+number of processes. (We speak of /strong scaling/ when the total amount of data
+written is kept constant, independent of the number of writing MPI processes.)
+
 #+headers: :flags "-I./src" :libs -lhdf5 -lmpi
-#+begin_src C -r -n :tangle src/phdf5-101.c :noweb no-export :exports both :results silent
+#+begin_src C -r -n :tangle src/phdf5-101.c :noweb no-export :exports code :results silent
 
 #include "literate-hdf5.h"
-
 #define SIZE 1024*1024
 
 int main(int argc, char** argv)
@@ -375,84 +411,32 @@ int main(int argc, char** argv)
   {
     hid_t fapl, file, dset, file_space, mem_space;
     float* buffer;
+    hsize_t file_size;
 
     fapl = H5Pcreate(H5P_FILE_ACCESS);
-    H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL);
+    H5Pset_fapl_mpio(fapl, MPI_COMM_WORLD, MPI_INFO_NULL); // (ref:par-fapl)
     file = H5Fcreate("multi-proc.h5", H5F_ACC_TRUNC, H5P_DEFAULT,
-                     fapl);
-    H5Pclose(fapl);
+                     fapl); // (ref:par-fcrt)
 
     dset = (*
-            <<make-dataset>>) (file, "xMi-floats", size*SIZE);
+            <<make-dataset>>) (file, "xMi-floats", size*SIZE); // (ref:par-dcrt)
     file_space = H5Dget_space(dset);
-    (*
-     <<make-file-space-selection>>) (file_space, rank, size, SIZE);
+    { // (ref:par-sel1)
+      hsize_t start = rank*SIZE, count = 1, block = SIZE;
+      H5Sselect_hyperslab(file_space, H5S_SELECT_SET,
+                          &start, NULL, &count, &block);
+    } // (ref:par-sel2)
 
-    <<create-buffer-and-write>>
+    <<create-buffer-and-write>> // (ref:par-wrt)
+
     <<clean-up>>
   }
 
-  MPI_Finalize();
+  MPI_Finalize(); // (ref:par-mpi-shutdown)
 }
 
 #+end_src
 
-*** Boilerplate and common code
-
-#+begin_src C -r -n :noweb-ref mpi-boilerplate
-
-MPI_Init(&argc, &argv)
-MPI_Comm_rank(MPI_COMM_WORLD, &size);
-MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-#+end_src
-
-#+begin_src C :noweb-ref make-dataset
-
-lambda(hid_t, (hid_t file, const char* name, hsize_t elt_count),
-       {
-         hid_t result;
-         hid_t fspace = H5Screate_simple(1, (hsize_t[]) { elt_count },
-                                         NULL);
-         result = H5Dcreate(file, name, H5T_IEEE_F32LE, fspace,
-                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-         H5Sclose(fspace);
-         return result;
-       })
-
-#+end_src
-
-#+begin_src C :noweb-ref make-file-space-dataset
-
-lambda(void, (hid_t fspace, int rank, int size, hsize_t my_count),
-       {
-         return;
-       })
-
-#+end_src
-
-#+begin_src C :noweb-ref create-buffer-and-write
-
-buffer = (float*) malloc(SIZE*sizeof(float));
-mem_space = H5Screate_simple(1, (hsize_t[]) { SIZE }, NULL);
-H5Sselect_all(mem_space);
-
-/* Do something interesting with buffer! */
-
-H5Dwrite(dset, H5T_NATIVE_FLOAT, mem_space, file_space, H5P_DEFAULT,
-         buffer);
-
-#+end_src
-
-#+begin_src C :noweb-ref clean-up
-
-free(buffer);
-H5Sclose(mem_space);
-H5Sclose(file_space);
-H5Dclose(dset);
-H5Fclose(file);
-
-#+end_src
 
 ** Cloud
 
@@ -617,8 +601,140 @@ head -n 10 hello.hdf5
 
 ** TODO External layout example
 
-* COMMENT html style specifications
+* Appendix <<sec:appendix>>
+
+** Boilerplate and common code <<sec:boilerplate>>
+
+In this section, we provide the common code snippets for the [[sec:hpc][sequential and
+parallel examples]].
+
+*** =<<mpi-boilerplate>>=
+
+This typical MPI boilerplate. Each MPI process determines the communicator size
+and its own rank.
+
+#+begin_src C -r -n :noweb-ref mpi-boilerplate
+
+MPI_Init(&argc, &argv);
+MPI_Comm_size(MPI_COMM_WORLD, &size);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+#+end_src
+
+*** =<<make-dataset>>=
+
+To create a dataset (array variable) we need to specify its shape (line [[(dsp-crt)]]) and the
+datatype of its elements (~H5T_IEEE_F32~ on line [[(dst-crt)]]).
+
+#+begin_src C -r -n :noweb-ref make-dataset
+
+lambda(hid_t, (hid_t file, const char* name, hsize_t elt_count),
+       {
+         hid_t result;
+         hid_t fspace = H5Screate_simple(1, (hsize_t[]) { elt_count },
+                                         NULL); // (ref:dsp-crt)
+         result = H5Dcreate(file, name, H5T_IEEE_F32LE, fspace,
+                            H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT); // (ref:dst-crt)
+         H5Sclose(fspace);
+         return result;
+       })
+
+#+end_src
+
+*** =<<create-buffer-and-write>>=
+
+We create and initialize the data buffer to be written. Its shape is described
+by its in-memory dataspace ~mem_space~ (line [[(msp)]]). Since we are writing the
+entire buffer, we are selecting all elements (line [[(msp-sel)]]).
+
+#+begin_src C -r -n :noweb-ref create-buffer-and-write
+
+buffer = (float*) malloc(SIZE*sizeof(float));
+{ /* Do something interesting with buffer! */
+  size_t i;
+  for (i = 0; i < SIZE; ++i)
+    buffer[i] = (float) i;
+}
+
+mem_space = H5Screate_simple(1, (hsize_t[]) { SIZE }, NULL); // (ref:msp)
+H5Sselect_all(mem_space); // (ref:msp-sel)
+
+H5Dwrite(dset, H5T_NATIVE_FLOAT, mem_space, file_space, H5P_DEFAULT,
+         buffer);
+
+#+end_src
+
+*** =<<clean-up>>=
+
+Adhering to the HDF5 library's handle discipline is the A and $\Omega$ when
+working with the C-API. All resources acquired in the course of an application
+must be released eventually.
+
+#+begin_src C -r -n :noweb-ref clean-up
+
+H5Pclose(fapl);
+free(buffer);
+H5Sclose(mem_space);
+H5Sclose(file_space);
+H5Dclose(dset);
+H5Fclose(file);
+
+#+end_src
+
+** Logistics <<sec:logistics>>
+
+There are several ways to run the C examples contained in this document.
+
+1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
+   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
+   knows where to find the HDF5 header files and library. If the =h5cc= compiler
+   wrapper is in your =PATH=, execute the following block:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
+
+   #+end_src
+
+   For examples involving parallel HDF5 use:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
+
+   #+end_src
+
+   and link against the MPI library.
+
+   Otherwise, you have to be more specfic. For example:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler
+         (concat "gcc --std=gnu99 "
+                 "-I/home/gerdheber/.local/include "
+                 "-L/home/gerdheber/.local/lib "))
+
+   #+end_src
+
+   You will also need to specify the libraries against which to link with a =:libs= source code block header. (See [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-C.html][C, C++, D Source Code Blocks in Org Mode]].)
+
+2. The examples' source code can be obtained by "tangling" the org file via =C-c
+   C-v t= from Emacs or from the command line by running
+
+   #+begin_example
+
+   emacs --batch --eval "(require 'org)" \
+         --eval '(org-babel-tangle-file "c-lambda.org")'
+
+   #+end_example
+
+   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
+   include and library paths for HDF5, MPI, etc.
+
+* COMMENT Local Variables
 
 # Local Variables:
 # org-html-head: "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/stylesheet.css\" />"
+# org-coderef-label-format: "// (ref:%s)"
 # End:
