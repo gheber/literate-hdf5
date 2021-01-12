@@ -519,6 +519,8 @@ values = array(x)[:,1]
 return mean(values)
 #+end_src
 
+#+RESULTS: mean
+
 After a long and complicated statistical analysis, we conclude that the sample
 average is call_mean(initial_data) {{{results(=-0.023857982999999992=)}}}.
 
@@ -563,9 +565,62 @@ Dumping the sample was a call_dumpCompound(initial_data) {{{results(=SUCCESS=)}}
 
 * Creating a Self-Contained Package
 
-** TODO Setting attributes
+** Setting attributes
 
-Make this more self contained by reporting additional parameters.
+Let's make this container more self-documenting by storing the simulation parameters
+$\mathrm{d}t$, $D$, and $\mu$!
+
+#+begin_src python :results silent
+
+import h5py, numpy as np
+
+with h5py.File('hello.hdf5', 'a') as f:
+    dset = f["compound"]
+    dset.attrs['dt'] = 0.1
+    dset.attrs['D'] = 0.5
+    dset.attrs['μ'] = 0.0
+
+#+end_src
+
+#+begin_src sh :results panel output :exports both
+h5dump -A -d compound hello.hdf5
+#+end_src
+
+#+RESULTS:
+#+begin_example
+HDF5 "hello.hdf5" {
+DATASET "compound" {
+   DATATYPE  H5T_COMPOUND {
+      H5T_IEEE_F64LE "time";
+      H5T_IEEE_F64LE "position";
+   }
+   DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+   ATTRIBUTE "D" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 0.5
+      }
+   }
+   ATTRIBUTE "dt" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 0.1
+      }
+   }
+   ATTRIBUTE "μ" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 0
+      }
+   }
+}
+}
+#+end_example
+
+Other good candidates for attributes include physical units, calibrations, RNG seeds, etc.
 
 ** Image handling
 
