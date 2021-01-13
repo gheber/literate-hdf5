@@ -3,7 +3,7 @@
 #+EMAIL: gheber@hdfgroup.org
 #+DATE: [2021-01-13 Wed]
 
-#+PROPERTY: header-args :eval never-export :exports both
+#+PROPERTY: header-args :eval never-export :exports both :results output
 
 * Emacs
 
@@ -27,7 +27,7 @@ This document was tested with the following software versions:
 : Emacs version: GNU Emacs 27.1.90 (build 3, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
 :  of 2021-01-09
 : org version: 9.4.4
-: org-babel-C-compiler: gcc
+: org-babel-C-compiler: h5cc --std=gnu99
 : org-babel-C++-compiler: g++
 
 * Environment
@@ -53,11 +53,11 @@ echo $LD_LIBRARY_PATH
 * C/C++
 
 #+name: cc
-#+begin_src emacs-lisp :results silent :exports none
+#+begin_src emacs-lisp :results silent :exports none :results value
 org-babel-C-compiler
 #+end_src
 
-#+begin_src sh :var cc=cc :exports both :results output
+#+begin_src sh :var cc=cc
 
 $cc --version
 
@@ -71,11 +71,11 @@ $cc --version
 :
 
 #+name: cpp
-#+begin_src emacs-lisp :results silent :exports none
+#+begin_src emacs-lisp :results silent :exports none :results value
 org-babel-C++-compiler
 #+end_src
 
-#+begin_src sh :var cpp=cpp :exports both :results output
+#+begin_src sh :var cpp=cpp
 
 g++ --version
 
@@ -103,7 +103,7 @@ h5cc --version
 
 * Python
 
-#+begin_src sh :results output
+#+begin_src sh
 
 python3 --version
 
@@ -112,7 +112,7 @@ python3 --version
 #+RESULTS:
 : Python 3.7.3
 
-#+begin_src python :results output
+#+begin_src python
 
 import sys
 print("Python {}.{}.{}".format(sys.version_info.major,
