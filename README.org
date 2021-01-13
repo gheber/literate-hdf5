@@ -30,7 +30,7 @@ through the [[file:./checklist.org][checklist]].
 
 There are several ways to run the C examples contained in these documents.  You
 can execute the code blocks containing =main= functions directly via =C-c C-c= ,
-provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]] knows where to
+provided the HDF5 library is in your =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]] knows where to
 find the HDF5 header files and library. If the =h5cc= compiler wrapper is in
 your =PATH=, execute the following block:
 
@@ -48,7 +48,7 @@ For parallel HDF5 examples use:
 
 #+end_src
 
-and link against the MPI library.
+and don't forget to link against the MPI library!
 
 (*Caveat:* I have not yet figured out a way to invoke the executable with =mpirun/mpiexec/srun=.)
 
