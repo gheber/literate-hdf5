@@ -13,58 +13,6 @@
 
 *Book recommendation:* [[https://letoverlambda.com/][Let Over Lambda—50 Years of Lisp]] by [[https://hoytech.com/about][Doug Hoyte]]
 
-* Logistics
-
-There are several ways to run the C examples contained in this and other
-documents.
-
-1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
-   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
-   knows where to find the HDF5 header files and library. If the =h5cc= compiler
-   wrapper is in your =PATH=, execute the following block:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
-
-   #+end_src
-
-   For examples involving parallel HDF5 use:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
-
-   #+end_src
-
-   and link against the MPI library.
-
-   Otherwise, you have to be more specfic. For example:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler
-         (concat "gcc --std=gnu99 "
-                 "-I/home/gerdheber/.local/include "
-                 "-L/home/gerdheber/.local/lib "))
-
-   #+end_src
-
-   You will also need to specify the libraries against which to link with a =:libs= source code block header. (See [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-C.html][C, C++, D Source Code Blocks in Org Mode]].)
-
-2. The examples' source code can be obtained by "tangling" the org file via =C-c
-   C-v t= from Emacs or from the command line by running
-
-   #+begin_example
-
-   emacs --batch --eval "(require 'org)" \
-         --eval '(org-babel-tangle-file "c-lambda.org")'
-
-   #+end_example
-
-   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
-   include and library paths for HDF5, MPI, etc.
-
 * TODO Peculiarities of Org-Mode C Code Blocks
 *  Lambda Helper
 
@@ -138,38 +86,6 @@ int main()
 
 #+RESULTS:
 : 196.0
-
-* Versions
-
-This document was tested with the following software versions:
-
-#+begin_src emacs-lisp :exports both
-
-(princ (concat
-        (format "Emacs version: %s\n"
-                (emacs-version))
-        (format "org version: %s\n"
-                (org-version))))
-
-#+end_src
-
-#+RESULTS:
-: Emacs version: GNU Emacs 27.1.90 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
-:  of 2020-12-31
-: org version: 9.4.4
-
-#+begin_src sh :exports both :results output
-
-gcc --version
-
-#+end_src
-
-#+RESULTS:
-: gcc (Debian 8.3.0-6) 8.3.0
-: Copyright (C) 2018 Free Software Foundation, Inc.
-: This is free software; see the source for copying conditions.  There is NO
-: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-:
 
 * COMMENT Local Variables
 
