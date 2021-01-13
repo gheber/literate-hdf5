@@ -13,19 +13,42 @@
 
 *Book recommendation:* [[https://letoverlambda.com/][Let Over Lambda—50 Years of Lisp]] by [[https://hoytech.com/about][Doug Hoyte]]
 
-* TODO Peculiarities of Org-Mode C Code Blocks
+* Peculiarities of Org-Mode C Code Blocks
+
+My starting point is Derek Feichtinger's [[https://github.com/dfeich/org-babel-examples/blob/master/C/c-babel.org][discussion]] and the official [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-C.html][C, C++, D
+Source Code Blocks in Org Mode]]. Considering how much boilerplate there is to C
+code, Org Babel does a decent job in bringing some literacy to the picture. We
+get [[https://orgmode.org/manual/Noweb-Reference-Syntax.html][noweb syntax]], can pass variables by header arguments, and can =CALL= source
+blocks as functions. However, an unpleasant side-effect of those parameters is
+the creation of /global variables/ in the tangled C code, which makes me
+uncomfortable. (OCD?)
+
+In C, nothing prevents us from reducing some boilerplate through a strict
+block-local variables discipline. From the perspective of structuring a larger
+piece of C code that's not sufficient though, because it casts a shadow of
+obscurity over code blocks due to potential references to variables outside the
+block scope. Looking at a noweb reference such as =<<block>>=, I can't really
+tell which variables from the current lexical scope it references. Conversely,
+when implementing the code behind =<<block>>=, I don't remember anymore what is
+in referents' scope. Ideally, there would be a way to pass arguments, and there
+is, but the price, currently, are global variables. They say that we can't have
+\lambda-functions in C, but what's holding us back?
+
 *  Lambda Helper
 
-We've wrapped standard headers and macros into a single header file called [[file:./src/literate-hdf5.h][literate-hdf5.h]].
+For this collection, we've wrapped standard headers and macros into a single
+header file called [[file:./src/literate-hdf5.h][literate-hdf5.h]].
 
 #+header: :main no
 #+begin_src C -r -n :tangle src/literate-hdf5.h :noweb yes :exports none
+
 #ifndef LITERATE_HDF5_H
 #define LITERATE_HDF5_H
 
 <<boilerplate>>
 
 #endif
+
 #+end_src
 
 These are the standard header files included.
@@ -86,6 +109,8 @@ int main()
 
 #+RESULTS:
 : 196.0
+
+I can live with that.
 
 * COMMENT Local Variables
 
