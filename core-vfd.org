@@ -52,40 +52,6 @@ The life-cycle of memory-backed HDF5 files is very simple:
       [[sec:building-blocks]], we show the implementation of their (common) building
       blocks.
 
-** Caveat Emptor
-
-The examples in this document are developed by incremental refinement. They
-are written in C in a style that we call /literate HDF5/. (See [[https://en.wikipedia.org/wiki/Literate_programming][Knuth1992]].)
-Each example is first outlined with placeholders inserted for code blocks
-developed later. That should make the program logic easy to follow, keep the
-noise-level down, and limit code repetition.
-
-This document ([[https://www.jstatsoft.org/article/view/v046i03][org file]]) is the /primary/ source for different artifacts
-such as other document formats (HTML, PDF, etc.) /and/ the actual source
-code (=*.c= files). Any change of this document will propagate
-automatically, making artifacts easy to maintain and to reproduce its
-results.
-
-This code is for illustration only. For example, no error detection or
-handling was attempted, and attentive readers will easily identify several
-corner cases that were not considered.
-
-** Syntax
-
-The basic syntactic element to denote a code block with a deferred
-implementation follows this pattern:
-
-#+begin_example
-(*
-  <<to-be-implemented>> ) (arg1, arg2, arg3, ...);
-#+end_example
-
-The syntax resembles a C function pointer, where =<<to-be-implemented>>=
-represents the code implementing the referenced function with arguments
-=arg1, arg2, arg3=, etc. Readers familiar with /lambda functions/ might find
-it convenient to think about these blocks as such. (If the examples were
-written in C++, that would be one way to go about it.)
-
 * Basic Use  <<sec:basic-use>>
 
 The HDF5 library supports an in-memory, aka. in-/core/, representation of HDF5
@@ -683,79 +649,7 @@ lambda(void, (hid_t src, hid_t dst),
 
 #+end_src
 
-* Appendix
-
-** Logistics
-
-There are several ways to run the examples contained in this document.
-
-1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
-   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
-   knows where to find the HDF5 header files and library. If the =h5cc= compiler
-   wrapper is in your =PATH=, execute the following block:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
-
-   #+end_src
-
-   Otherwise, you have to be more specfic. For example:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler
-         (concat "gcc --std=gnu99 "
-                 "-I/home/gerdheber/.local/include "
-                 "-L/home/gerdheber/.local/lib "))
-
-   #+end_src
-
-2. The examples' source code can be obtained by "tangling" the org file via =C-c
-   C-v t= from Emacs or from the command line by running
-
-   #+begin_example
-
-   emacs --batch --eval "(require 'org)" \
-         --eval '(org-babel-tangle-file "core-vfd.org")'
-
-   #+end_example
-
-   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
-   include and library paths for HDF5.
-
-** Versions
-
-This document was tested with the following software versions:
-
-#+begin_src emacs-lisp :exports both
-
-(princ (concat
-        (format "Emacs version: %s\n"
-                (emacs-version))
-        (format "org version: %s\n"
-                (org-version))))
-
-#+end_src
-
-#+RESULTS:
-: Emacs version: GNU Emacs 27.1.90 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
-:  of 2020-12-31
-: org version: 9.4.4
-
-#+begin_src sh :exports both :results output
-
-gcc --version
-
-#+end_src
-
-#+RESULTS:
-: gcc (Debian 8.3.0-6) 8.3.0
-: Copyright (C) 2018 Free Software Foundation, Inc.
-: This is free software; see the source for copying conditions.  There is NO
-: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-:
-
+* COMMENT Local Variables
 
 # Local Variables:
 # org-coderef-label-format: "// (ref:%s)"
