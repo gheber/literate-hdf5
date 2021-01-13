@@ -3,7 +3,7 @@
 #+EMAIL: gheber@hdfgroup.org
 #+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
 #+DATE: [2021-01-01 Fri]
-#+OPTIONS: author:t creator:t email:t toc:t num:nil
+#+OPTIONS: author:t creator:t email:t toc:nil num:nil
 
 #+PROPERTY: header-args :eval never-export
 
@@ -143,8 +143,8 @@ card B [
 User -> B
   #+end_src
 
-#+RESULTS:
-[[file:img/hdf5-container.png]]
+  #+RESULTS:
+  [[file:img/hdf5-container.png]]
 
 ** Data
 
@@ -180,8 +180,8 @@ root --> i1b #line:red;line.bold;text:red : "Level 1b"
 i1b --> i2e #green;line.dashed;text:green : "Level 2e"
     #+end_src
 
-#+RESULTS:
-[[file:img/technical-detail.png]]
+    #+RESULTS:
+    [[file:img/technical-detail.png]]
 
 ** Format
 
@@ -198,7 +198,7 @@ And you can create your own layouts!
 
 ** (Version) 5
 
-We've tried (in versions 1,2,3, 4) to make all the mistakes for you!
+We've tried (in versions 1,2,3, 4) to make all original mistakes for you!
 
 * Hello, HDF5!
 
@@ -294,8 +294,8 @@ rectangle "Grouping" <<Concept>> {
 }
 #+end_src
 
-    #+RESULTS:
-    [[file:img/hdf5-primitives.png]]
+#+RESULTS:
+[[file:img/hdf5-primitives.png]]
 
 (Datasets and attributes are /roles/ in which array variables can be used in HDF5,
 and different rules apply to them.)
@@ -321,8 +321,8 @@ Play store]].
 #+ATTR_LATEX: :width 480px
 [[file:./img/Pydroid3.png]]
 
-*Homework:* Run the ="Hello, HDF5!"= example on your phone and look at the file on
-your computer!
+*Homework:* Run the ="Hello, HDF5!"= example on your phone and look at the file
+on your computer!
 
 ** HPC (aka. Parallel HDF5) <<sec:hpc>>
 
@@ -454,10 +454,11 @@ cloud " HDF5 "
 
 *  Simple Data Analysis
 
-*Reference:* [[https://www.youtube.com/watch?v=AP4LX8L7MFM][Reproducible Research with GNU Emacs and Org-mode]] by Thibault Lestang
+*Reference:* [[https://www.youtube.com/watch?v=AP4LX8L7MFM][Reproducible Research with GNU Emacs and Org-mode]] by Thibault
+Lestang
 
-The following stochastic differential equation describes a [[https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process][1D /Ornstein-Uhlenbeck/
-process]]:
+The following stochastic differential equation describes a [[https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process][1D
+/Ornstein-Uhlenbeck/ process]]:
 
 \begin{equation}
 \mathrm{d}x_t = -\mu x_t + \sqrt{2D}\mathrm{d}W_t
@@ -471,7 +472,8 @@ A sample trajectory of the stochastic process can be approximated with a snippet
 of C++ code.
 
 #+NAME: initial_data
-#+begin_src C++ :includes '("<iostream>" "<random>") :cache yes :noweb yes :results silent
+#+HEADER: :includes '("<iostream>" "<random>")
+#+begin_src C++ :cache yes :noweb yes :results silent
 std::default_random_engine generator;
 std::normal_distribution<> distribution{0.0, 1.0};
 
@@ -578,17 +580,15 @@ h5dump -H -d compound hello.hdf5
 #+end_src
 
 #+RESULTS:
-#+begin_example
-HDF5 "hello.hdf5" {
-DATASET "compound" {
-   DATATYPE  H5T_COMPOUND {
-      H5T_IEEE_F64LE "time";
-      H5T_IEEE_F64LE "position";
-   }
-   DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
-}
-}
-#+end_example
+: HDF5 "hello.hdf5" {
+: DATASET "compound" {
+:    DATATYPE  H5T_COMPOUND {
+:       H5T_IEEE_F64LE "time";
+:       H5T_IEEE_F64LE "position";
+:    }
+:    DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+: }
+: }
 
 * Creating a Self-Contained Package
 
@@ -597,7 +597,7 @@ DATASET "compound" {
 Let's make this container more self-documenting by storing the simulation
 parameters $\mathrm{d}t$, $D$, and $\mu$!
 
-#+begin_src python :results output
+#+begin_src python :results silent
 
 import h5py, numpy as np
 
@@ -606,7 +606,6 @@ with h5py.File('hello.hdf5', 'a') as f:
     dset.attrs['dt'] = 0.1
     dset.attrs['D'] = 0.5
     dset.attrs['μ'] = 0.0
-    return 'SUCCESS'
 
 #+end_src
 
@@ -653,10 +652,20 @@ seeds, etc.
 
 ** Image handling
 
-*** Opaque datasets
+In this section, we focus on /raster/ images. However, the two approaches
+presented here apply, mutatis mutandis, to /vector/ images.
+
+We can treat images as blobs or byte sequences (see the section [[sec:opaque][Opaque
+datasets]]), or we cant treat them as 2D arrays of pixels/color values plus
+certain metadata, e.g., palette (see the section [[sec:transparent][Annotated 2D
+datasets]]). Whichever approach we choose determines how they then can be accessed
+or manipulated.
+
+*** Opaque datasets<<sec:opaque>>
 
 #+header: :flags "-I./src" :libs -lhdf5
 #+begin_src C -r -n :noweb no-export :tangle src/image2opaque.c :results output
+
 #include "literate-hdf5.h"
 
 int main(int argc, char** argv)
@@ -682,18 +691,18 @@ int main(int argc, char** argv)
 
   #+begin_src C :noweb-ref read-image-bytes :exports code
 
-  lambda(char*, (const char* name, size_t* size),
-         {
-           char* result;
-           FILE* fp = fopen(name, "rb");
-           fseek(fp, 0L, SEEK_END);
-           *size = ftell(fp);
-           fseek(fp, 0, SEEK_SET);
-           result = (char*) malloc(*size);
-           fread(result, size, 1, fp);
-           fclose(fp);
-           return result;
-         })
+lambda(char*, (const char* name, size_t* size),
+       {
+         char* result;
+         FILE* fp = fopen(name, "rb");
+         fseek(fp, 0L, SEEK_END);
+         *size = ftell(fp);
+         fseek(fp, 0, SEEK_SET);
+         result = (char*) malloc(*size);
+         fread(result, size, 1, fp);
+         fclose(fp);
+         return result;
+       })
 
 #+end_src
 
@@ -721,12 +730,12 @@ lambda(void,
 
 #+end_src
 
-*** Annotated 2D datasets
+*** Annotated 2D datasets<<sec:transparent>>
 
-We use a simple tool =gif2h5= to create a dataset representation conforming to the
-[[https://portal.hdfgroup.org/display/HDF5/HDF5+Image+and+Palette+Specification%2C+Version+1.2][HDF5 image specification]]. As a sample image, we use the sample trajectory from
-section [[sec:viz][Visualization]]. Unfortunately, the simple =gif2h5= tool accepts only GIF
-images, and we need to first convert the PNG file =timeseries_vis.png=.
+We use a simple tool =gif2h5= to create a dataset representation conforming to
+the [[https://portal.hdfgroup.org/display/HDF5/HDF5+Image+and+Palette+Specification%2C+Version+1.2][HDF5 image specification]]. As a sample image, we use the sample trajectory
+from section [[sec:viz][Visualization]]. Unfortunately, the simple =gif2h5= tool accepts only
+GIF images, and we need to first convert the PNG file =timeseries_vis.png=.
 [[https://imagemagick.org/index.php][ImageMagick]] to the rescue!
 
 #+begin_src sh :results output :exports both
@@ -750,8 +759,8 @@ Now we are ready to call =gif2h5=.
 gif2h5 timeseries_vis.gif timeseries_vis.h5
 #+end_src
 
-=timeseries_vis.h5= contains a 2D dataset of pixels called =Image0= and a 2D palette
-called =global=.
+=timeseries_vis.h5= contains a 2D dataset of pixels called =Image0= and a 2D
+palette called =global=.
 
 #+begin_src sh :results output :exports both
 h5ls -v timeseries_vis.h5
@@ -793,6 +802,8 @@ h5copy -v -f ref -i timeseries_vis.h5 -s Image0 -o hello.hdf5 -d Image0
 #+end_src
 
 #+RESULTS:
+: Copying file <timeseries_vis.h5> and object <Image0> to file <hello.hdf5> and object <Image0>
+: Using ref flag
 
 ** Jamming a text file
 
@@ -815,7 +826,7 @@ head -n 10 hello.hdf5
 ,#+EMAIL: gheber@hdfgroup.org
 ,#+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
 ,#+DATE: [2021-01-01 Fri]
-,#+OPTIONS: author:t creator:t email:t toc:t num:nil
+,#+OPTIONS: author:t creator:t email:t toc:nil num:nil
 
 ,#+PROPERTY: header-args :eval never-export
 
@@ -866,10 +877,16 @@ Opened "hello.hdf5" with sec2 driver.
         Type:      4-byte null-terminated ASCII string
     Attribute: PALETTE scalar
         Type:      object reference
-    Location:  1:347584
+    Location:  1:381709
     Links:     1
     Storage:   307200 logical bytes, 307200 allocated bytes, 100.00% utilization
     Type:      native unsigned char
+/bytes                   Dataset {SCALAR}
+    Location:  1:40320
+    Links:     1
+    Storage:   32141 logical bytes, 32141 allocated bytes, 100.00% utilization
+    Type:      32141-byte opaque type
+               (tag = "image/png")
 /compound                Dataset {100/100}
     Attribute: D scalar
         Type:      native double
@@ -889,12 +906,12 @@ Opened "hello.hdf5" with sec2 driver.
     Links:     1
     Storage:   1600 logical bytes, 1600 allocated bytes, 100.00% utilization
     Type:      native double
-/~obj_pointed_by_347952  Dataset {128/128, 3/3}
+/~obj_pointed_by_382077  Dataset {128/128, 3/3}
     Attribute: CLASS scalar
         Type:      8-byte null-terminated ASCII string
     Attribute: PAL_VERSION scalar
         Type:      4-byte null-terminated ASCII string
-    Location:  1:347952
+    Location:  1:382077
     Links:     2
     Storage:   384 logical bytes, 384 allocated bytes, 100.00% utilization
     Type:      native unsigned char
@@ -917,7 +934,7 @@ head -n 10 user-block.org
 ,#+EMAIL: gheber@hdfgroup.org
 ,#+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
 ,#+DATE: [2021-01-01 Fri]
-,#+OPTIONS: author:t creator:t email:t toc:t num:nil
+,#+OPTIONS: author:t creator:t email:t toc:nil num:nil
 
 ,#+PROPERTY: header-args :eval never-export
 
