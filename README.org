@@ -25,7 +25,8 @@ becoming an [[https://www.masteringemacs.org/][Emacs master]].
 Derek Feichtinger's [[https://github.com/dfeich/org-babel-examples][repo of Org Babel examples]] is a constant source of
 inspiration. Check it out!
 
-I recommend you run through the [[file:./checklist.org][checklist]] before going of chasing geese.
+For your own sanity and that of those around you, I recommend you first run
+through the [[file:./checklist.org][checklist]].
 
 There are several ways to run the C examples contained in these documents.
 You can execute the code blocks containing =main= functions directly via =C-c
