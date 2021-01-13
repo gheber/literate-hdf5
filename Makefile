@@ -1,5 +1,5 @@
-hdf = *.h5
-media = *.html *.pdf *.tex
+hdf = *.h5 *.hdf5
+media = *.gif *.html *.pdf *.tex
 objects = *.o
 
 .PHONY : clean

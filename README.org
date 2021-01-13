@@ -1,6 +1,59 @@
 #+TILE: Literate HDF5
 
+* Table of Contents
+
 - [[file:./hdf5-intro.org][HDF5 Introduction]]
 - [[file:./c-lambda.org][Let It Be Lambda (λ)]]
 - [[file:./fsm.org][Tracking HDF5 Free Space]]
 - [[file:./core-vfd.org][Using Memory-Backed HDF5 Files to Reduce Storage Access and Size]]
+
+* Logistics
+
+There are several ways to run the C examples contained in these documents.
+
+1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
+   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
+   knows where to find the HDF5 header files and library. If the =h5cc= compiler
+   wrapper is in your =PATH=, execute the following block:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
+
+   #+end_src
+
+   For parallel HDF5 examples use:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
+
+   #+end_src
+
+   and link against the MPI library.
+
+   Otherwise, you have to be more specfic. For example:
+
+   #+begin_src emacs-lisp :results silent
+
+   (setq org-babel-C-compiler
+         (concat "gcc --std=gnu99 "
+                 "-I/home/gerdheber/.local/include "
+                 "-L/home/gerdheber/.local/lib "))
+
+   #+end_src
+
+   You will also need to specify the libraries against which to link with a =:libs= source code block header. (See [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-C.html][C, C++, D Source Code Blocks in Org Mode]].)
+
+2. The examples' source code can be obtained by "tangling" the respective org
+   file via =C-c C-v t= from Emacs or from the command line by running
+
+   #+begin_example
+
+   emacs --batch --eval "(require 'org)" \
+         --eval '(org-babel-tangle-file "<filename>.org")'
+
+   #+end_example
+
+   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
+   include and library paths for HDF5, MPI, etc.

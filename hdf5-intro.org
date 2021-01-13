@@ -3,7 +3,7 @@
 #+EMAIL: gheber@hdfgroup.org
 #+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
 #+DATE: [2021-01-01 Fri]
-#+OPTIONS: author:t creator:t email:t toc:nil num:nil
+#+OPTIONS: author:t creator:t email:t toc:t num:nil
 
 #+PROPERTY: header-args :eval never-export
 
@@ -437,7 +437,6 @@ int main(int argc, char** argv)
 
 #+end_src
 
-
 ** Cloud
 
 The best known example is the [[https://www.hdfgroup.org/solutions/highly-scalable-data-service-hsds/][Highly Scalable Data Service]] (HSDS). See John
@@ -489,7 +488,7 @@ for (unsigned i = 0; i < 100; ++i)
   }
 #+end_src
 
-** Visualization
+** Visualization<<sec:viz>>
 
 #+HEADER: :var timeseries=initial_data :results file :dir "./img/"
 #+begin_src python :exports both
@@ -512,25 +511,21 @@ return 'timeseries_vis.png'
 The following function computes the sample mean.
 
 #+NAME: mean
-#+HEADER: :var x=0 :exports code
-#+begin_src python
+#+HEADER: :var x=0
+#+begin_src python :exports code
 from numpy import array, mean
 values = array(x)[:,1]
 return mean(values)
 #+end_src
-
-#+RESULTS: mean
 
 After a long and complicated statistical analysis, we conclude that the sample
 average is call_mean(initial_data) {{{results(=-0.023857982999999992=)}}}.
 
 ** Storing the sample trajectory
 
-The following function stores our sample as a =100 x 2= 2D array.
+The following snippet stores our sample as a =100 x 2= 2D array.
 
-#+NAME: dump2D
-#+HEADER: :var x=0 :exports code
-#+begin_src python
+#+begin_src python :var x=initial_data :exports both
 import h5py, numpy as np
 
 with h5py.File('hello.hdf5', 'a') as f:
@@ -538,15 +533,29 @@ with h5py.File('hello.hdf5', 'a') as f:
     return 'SUCCESS'
 #+end_src
 
-Dumping the sample was a call_dump2D(initial_data) {{{results(=SUCCESS=)}}}
+#+RESULTS:
+: SUCCESS
+
+#+begin_src sh :results output :exports both
+h5dump -H -d t_x hello.hdf5
+#+end_src
+
+#+RESULTS:
+: HDF5 "hello.hdf5" {
+: DATASET "t_x" {
+:    DATATYPE  H5T_IEEE_F64LE
+:    DATASPACE  SIMPLE { ( 100, 2 ) / ( 100, 2 ) }
+: }
+: }
 
 Except for the name of the dataset =t_x=, it may not be obvious who's who.
 
 *** Field names
 
-#+NAME: dumpCompound
-#+HEADER: :var x=0 :exports code
-#+begin_src python
+The following snippet stores our sample as a =100= element 1D array of a compound
+datatype.
+
+#+begin_src python :var x=initial_data  :exports both
 
 import h5py, numpy as np
 
@@ -561,16 +570,34 @@ with h5py.File('hello.hdf5', 'a') as f:
 
 #+end_src
 
-Dumping the sample was a call_dumpCompound(initial_data) {{{results(=SUCCESS=)}}}
+#+RESULTS:
+: SUCCESS
+
+#+begin_src sh :results output :exports both
+h5dump -H -d compound hello.hdf5
+#+end_src
+
+#+RESULTS:
+#+begin_example
+HDF5 "hello.hdf5" {
+DATASET "compound" {
+   DATATYPE  H5T_COMPOUND {
+      H5T_IEEE_F64LE "time";
+      H5T_IEEE_F64LE "position";
+   }
+   DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+}
+}
+#+end_example
 
 * Creating a Self-Contained Package
 
 ** Setting attributes
 
-Let's make this container more self-documenting by storing the simulation parameters
-$\mathrm{d}t$, $D$, and $\mu$!
+Let's make this container more self-documenting by storing the simulation
+parameters $\mathrm{d}t$, $D$, and $\mu$!
 
-#+begin_src python :results silent
+#+begin_src python :results output
 
 import h5py, numpy as np
 
@@ -579,6 +606,7 @@ with h5py.File('hello.hdf5', 'a') as f:
     dset.attrs['dt'] = 0.1
     dset.attrs['D'] = 0.5
     dset.attrs['μ'] = 0.0
+    return 'SUCCESS'
 
 #+end_src
 
@@ -620,15 +648,155 @@ DATASET "compound" {
 }
 #+end_example
 
-Other good candidates for attributes include physical units, calibrations, RNG seeds, etc.
+Other good candidates for attributes include physical units, calibrations, RNG
+seeds, etc.
 
 ** Image handling
 
-*** TODO Opaque datasets
+*** Opaque datasets
 
-*** TODO Annotated 2D datasets
+#+header: :flags "-I./src" :libs -lhdf5
+#+begin_src C -r -n :noweb no-export :tangle src/image2opaque.c :results output
+#include "literate-hdf5.h"
 
-** TODO Jamming a text file
+int main(int argc, char** argv)
+{
+  size_t size;
+  char* buf = (*
+               <<read-image-bytes>>) ("./img/timeseries_vis.png", &size);
+  printf("%ld\n", size);
+
+  (*
+   <<create-and-write-opaque-dset>>) ("hello.hdf5", "bytes", buf, size);
+
+  free(buf);
+  return 0;
+}
+
+  #+end_src
+
+  #+RESULTS:
+  : 32141
+
+**** =<<read-image-bytes>>=
+
+  #+begin_src C :noweb-ref read-image-bytes :exports code
+
+  lambda(char*, (const char* name, size_t* size),
+         {
+           char* result;
+           FILE* fp = fopen(name, "rb");
+           fseek(fp, 0L, SEEK_END);
+           *size = ftell(fp);
+           fseek(fp, 0, SEEK_SET);
+           result = (char*) malloc(*size);
+           fread(result, size, 1, fp);
+           fclose(fp);
+           return result;
+         })
+
+#+end_src
+
+**** =<<create-and-write-opaque-dset>>=
+
+#+begin_src C :noweb-ref create-and-write-opaque-dset :exports code
+
+lambda(void,
+       (const char* fname, const char* dname,
+        const char* buf, size_t size),
+       {
+         hid_t file = H5Fopen(fname, H5F_ACC_RDWR, H5P_DEFAULT);
+         hid_t dtype = H5Tcreate(H5T_OPAQUE, size);
+         hid_t dspace = H5Screate(H5S_SCALAR);
+         hid_t dset;
+         H5Tset_tag(dtype, "image/png");
+         dset = H5Dcreate(file, dname, dtype, dspace,
+                          H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+         H5Dwrite(dset, dtype, H5S_ALL, H5S_ALL, H5P_DEFAULT, buf);
+         H5Dclose(dset);
+         H5Sclose(dspace);
+         H5Tclose(dtype);
+         H5Fclose(file);
+       })
+
+#+end_src
+
+*** Annotated 2D datasets
+
+We use a simple tool =gif2h5= to create a dataset representation conforming to the
+[[https://portal.hdfgroup.org/display/HDF5/HDF5+Image+and+Palette+Specification%2C+Version+1.2][HDF5 image specification]]. As a sample image, we use the sample trajectory from
+section [[sec:viz][Visualization]]. Unfortunately, the simple =gif2h5= tool accepts only GIF
+images, and we need to first convert the PNG file =timeseries_vis.png=.
+[[https://imagemagick.org/index.php][ImageMagick]] to the rescue!
+
+#+begin_src sh :results output :exports both
+convert -version
+#+end_src
+
+#+RESULTS:
+: Version: ImageMagick 6.9.10-23 Q16 x86_64 20190101 https://imagemagick.org
+: Copyright: © 1999-2019 ImageMagick Studio LLC
+: License: https://imagemagick.org/script/license.php
+: Features: Cipher DPC Modules OpenMP
+: Delegates (built-in): bzlib djvu fftw fontconfig freetype heic jbig jng jp2 jpeg lcms lqr ltdl lzma openexr pangocairo png tiff webp wmf x xml zlib
+
+#+begin_src sh :results silent
+convert ./img/timeseries_vis.png timeseries_vis.gif
+#+end_src
+
+Now we are ready to call =gif2h5=.
+
+#+begin_src sh :results silent
+gif2h5 timeseries_vis.gif timeseries_vis.h5
+#+end_src
+
+=timeseries_vis.h5= contains a 2D dataset of pixels called =Image0= and a 2D palette
+called =global=.
+
+#+begin_src sh :results output :exports both
+h5ls -v timeseries_vis.h5
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Opened "timeseries_vis.h5" with sec2 driver.
+Image0                   Dataset {480/480, 640/640}
+    Attribute: CLASS scalar
+        Type:      6-byte null-terminated ASCII string
+    Attribute: IMAGE_SUBCLASS scalar
+        Type:      14-byte null-terminated ASCII string
+    Attribute: IMAGE_VERSION scalar
+        Type:      4-byte null-terminated ASCII string
+    Attribute: PALETTE scalar
+        Type:      object reference
+    Location:  1:1400
+    Links:     1
+    Storage:   307200 logical bytes, 307200 allocated bytes, 100.00% utilization
+    Type:      native unsigned char
+global                   Dataset {128/128, 3/3}
+    Attribute: CLASS scalar
+        Type:      8-byte null-terminated ASCII string
+    Attribute: PAL_VERSION scalar
+        Type:      4-byte null-terminated ASCII string
+    Location:  1:800
+    Links:     1
+    Storage:   384 logical bytes, 384 allocated bytes, 100.00% utilization
+    Type:      native unsigned char
+#+end_example
+
+Use [[https://portal.hdfgroup.org/display/HDFVIEW/HDFView][HDFView]] to look at the image!
+
+Finally we copy the pixel and palette datasets to =hello.hdf5=.
+
+#+begin_src sh :results panel output
+h5copy -v -f ref -i timeseries_vis.h5 -s Image0 -o hello.hdf5 -d Image0
+#+end_src
+
+#+RESULTS:
+
+** Jamming a text file
+
+Finally, we jam this text file (Org file)
 
 #+NAME: org-file-name
 #+begin_src emacs-lisp :results silent :exports none
@@ -645,16 +813,116 @@ head -n 10 hello.hdf5
 ,#+TITLE: HDF5 Introduction
 ,#+AUTHOR: Gerd Heber
 ,#+EMAIL: gheber@hdfgroup.org
+,#+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
 ,#+DATE: [2021-01-01 Fri]
-,#+OPTIONS: toc:nil num:nil
+,#+OPTIONS: author:t creator:t email:t toc:t num:nil
 
 ,#+PROPERTY: header-args :eval never-export
 
 ,* Outline
-
 #+end_example
 
-** TODO External layout example
+It's still an HDF5 file:
+
+#+begin_src sh :results panel output :exports both
+h5ls -vr hello.hdf5
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Opened "hello.hdf5" with sec2 driver.
+/                        Group
+    Attribute: processor scalar
+        Type:      variable-length null-terminated UTF-8 string
+    Attribute: release scalar
+        Type:      variable-length null-terminated UTF-8 string
+    Attribute: system scalar
+        Type:      variable-length null-terminated UTF-8 string
+    Location:  1:96
+    Links:     1
+/15                      Group
+    Location:  1:1344
+    Links:     1
+/15/temperature          Dataset {1024/1024}
+    Attribute: dt scalar
+        Type:      native double
+    Location:  1:1072
+    Links:     1
+    Storage:   8192 logical bytes, 8192 allocated bytes, 100.00% utilization
+    Type:      native double
+/15/wind                 Dataset {2048/2048}
+    Attribute: dt scalar
+        Type:      native double
+    Location:  1:14992
+    Links:     1
+    Storage:   16384 logical bytes, 16384 allocated bytes, 100.00% utilization
+    Type:      native double
+/Image0                  Dataset {480/480, 640/640}
+    Attribute: CLASS scalar
+        Type:      6-byte null-terminated ASCII string
+    Attribute: IMAGE_SUBCLASS scalar
+        Type:      14-byte null-terminated ASCII string
+    Attribute: IMAGE_VERSION scalar
+        Type:      4-byte null-terminated ASCII string
+    Attribute: PALETTE scalar
+        Type:      object reference
+    Location:  1:347584
+    Links:     1
+    Storage:   307200 logical bytes, 307200 allocated bytes, 100.00% utilization
+    Type:      native unsigned char
+/compound                Dataset {100/100}
+    Attribute: D scalar
+        Type:      native double
+    Attribute: dt scalar
+        Type:      native double
+    Attribute: \316\274 scalar
+        Type:      native double
+    Location:  1:36416
+    Links:     1
+    Storage:   1600 logical bytes, 1600 allocated bytes, 100.00% utilization
+    Type:      struct {
+                   "time"             +0    native double
+                   "position"         +8    native double
+               } 16 bytes
+/t_x                     Dataset {100/100, 2/2}
+    Location:  1:32768
+    Links:     1
+    Storage:   1600 logical bytes, 1600 allocated bytes, 100.00% utilization
+    Type:      native double
+/~obj_pointed_by_347952  Dataset {128/128, 3/3}
+    Attribute: CLASS scalar
+        Type:      8-byte null-terminated ASCII string
+    Attribute: PAL_VERSION scalar
+        Type:      4-byte null-terminated ASCII string
+    Location:  1:347952
+    Links:     2
+    Storage:   384 logical bytes, 384 allocated bytes, 100.00% utilization
+    Type:      native unsigned char
+#+end_example
+
+We can extract the so-called /user block/ at the beginning of the file with =h5unjam=:
+
+#+begin_src sh :results silent :exports code
+h5unjam -i hello.hdf5 -o no-user-block.h5 -u user-block.org
+#+end_src
+
+#+begin_src sh :results output
+head -n 10 user-block.org
+#+end_src
+
+#+RESULTS:
+#+begin_example
+,#+TITLE: HDF5 Introduction
+,#+AUTHOR: Gerd Heber
+,#+EMAIL: gheber@hdfgroup.org
+,#+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
+,#+DATE: [2021-01-01 Fri]
+,#+OPTIONS: author:t creator:t email:t toc:t num:nil
+
+,#+PROPERTY: header-args :eval never-export
+
+,* Outline
+#+end_example
 
 * Appendix <<sec:appendix>>
 
@@ -735,57 +1003,6 @@ H5Dclose(dset);
 H5Fclose(file);
 
 #+end_src
-
-** Logistics <<sec:logistics>>
-
-There are several ways to run the C examples contained in this document.
-
-1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
-   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
-   knows where to find the HDF5 header files and library. If the =h5cc= compiler
-   wrapper is in your =PATH=, execute the following block:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
-
-   #+end_src
-
-   For examples involving parallel HDF5 use:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
-
-   #+end_src
-
-   and link against the MPI library.
-
-   Otherwise, you have to be more specfic. For example:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler
-         (concat "gcc --std=gnu99 "
-                 "-I/home/gerdheber/.local/include "
-                 "-L/home/gerdheber/.local/lib "))
-
-   #+end_src
-
-   You will also need to specify the libraries against which to link with a =:libs= source code block header. (See [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-C.html][C, C++, D Source Code Blocks in Org Mode]].)
-
-2. The examples' source code can be obtained by "tangling" the org file via =C-c
-   C-v t= from Emacs or from the command line by running
-
-   #+begin_example
-
-   emacs --batch --eval "(require 'org)" \
-         --eval '(org-babel-tangle-file "c-lambda.org")'
-
-   #+end_example
-
-   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
-   include and library paths for HDF5, MPI, etc.
 
 * COMMENT Local Variables
 

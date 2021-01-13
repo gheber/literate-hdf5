@@ -86,7 +86,6 @@ represents the code implementing the referenced function with arguments
 it convenient to think about these blocks as such. (If the examples were
 written in C++, that would be one way to go about it.)
 
-
 * Basic Use  <<sec:basic-use>>
 
 The HDF5 library supports an in-memory, aka. in-/core/, representation of HDF5
@@ -724,7 +723,6 @@ There are several ways to run the examples contained in this document.
 
    The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
    include and library paths for HDF5.
-
 
 ** Versions
 
