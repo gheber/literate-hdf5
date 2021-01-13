@@ -92,7 +92,7 @@ GROUP "/" {
 int main(int argc, char** argv)
 {
   hid_t file = (*
-                <<make-fsm-file>> ) ("fsm.h5", 1048576); // (ref:fsm-blk0)
+                <<make-fsm-file>> ) ("fsm.h5", 1048576, 4096); // (ref:fsm-blk0)
   H5Dclose((*
              <<create-1Mi-dataset>> ) (file, "1Mi-double", H5T_IEEE_F64LE));
   H5Dclose((*
@@ -226,15 +226,19 @@ We enable free-space tracking by setting
    [[(make-fsm-blk1)]])
 
 #+begin_src C -r -n :noweb-ref make-fsm-file
-lambda(hid_t, (const char* name, hsize_t threshold),
+lambda(hid_t, (const char* name, hsize_t threshold, hsize_t page_size),
        {
          hid_t result;
          hid_t fcpl = H5Pcreate(H5P_FILE_CREATE);
          hid_t fapl = H5Pcreate(H5P_FILE_ACCESS);
+#if H5_VERSION_GE(1, 10, 0) // (ref:vers-chk0)
+         H5Pset_file_space_page_size (fcpl, page_size); // (ref:page-size)
          H5Pset_file_space_strategy(fcpl, H5F_FSPACE_STRATEGY_PAGE, 1, // (ref:make-fsm-blk0)
                                     threshold);
          H5Pset_libver_bounds(fapl, H5F_LIBVER_V110, H5F_LIBVER_LATEST); // (ref:make-fsm-blk1)
-
+#elif H5_VERSION_GE(1, 8, 0) // (ref:vers-chk1)
+         H5Pset_libver_bounds(fapl, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+#endif
          result = H5Fcreate(name, H5F_ACC_TRUNC, fcpl, fapl);
          H5Pclose(fapl);
          H5Pclose(fcpl);
@@ -265,89 +269,3 @@ lambda(hid_t, (hid_t file, const char* name, hid_t dtype),
          return result;
        })
 #+end_src
-
-* Appendix
-
-** Logistics
-
-There are several ways to run the examples contained in this document.
-
-1. [[https://www.gnu.org/software/emacs/][Emacs]] users can execute the code blocks containing =main= functions directly
-   via =C-c C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]]
-   knows where to find the HDF5 header files and library. If the =h5cc= compiler
-   wrapper is in your =PATH=, execute the following block:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "h5cc --std=gnu99 ")
-
-   #+end_src
-
-   Otherwise, you have to be more specfic. For example:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler
-         (concat "gcc --std=gnu99 "
-                 "-I/home/gerdheber/.local/include "
-                 "-L/home/gerdheber/.local/lib "))
-
-   #+end_src
-
-   With a parallel build of HDF5, use this:
-
-   #+begin_src emacs-lisp :results silent
-
-   (setq org-babel-C-compiler "HDF5_CC=mpicc h5cc --std=gnu99 ")
-
-   #+end_src
-
-   and link against the MPI library.
-
-2. The examples' source code can be obtained by "tangling" the org file via =C-c
-   C-v t= from Emacs or from the command line by running
-
-   #+begin_example
-
-   emacs --batch --eval "(require 'org)" \
-         --eval '(org-babel-tangle-file "fsm.org")'
-
-   #+end_example
-
-   The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
-   include and library paths for HDF5.
-
-** Versions
-This document was tested with the following software versions:
-
-#+begin_src emacs-lisp :exports both
-
-(princ (concat
-        (format "Emacs version: %s\n"
-                (emacs-version))
-        (format "org version: %s\n"
-                (org-version))))
-
-#+end_src
-
-#+RESULTS:
-: Emacs version: GNU Emacs 27.1.90 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
-:  of 2020-12-31
-: org version: 9.4.4
-
-#+begin_src sh :exports both :results output
-
-gcc --version
-
-#+end_src
-
-#+RESULTS:
-: gcc (Debian 8.3.0-6) 8.3.0
-: Copyright (C) 2018 Free Software Foundation, Inc.
-: This is free software; see the source for copying conditions.  There is NO
-: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-:
-
-# Local Variables:
-# org-coderef-label-format: "// (ref:%s)"
-# End:
