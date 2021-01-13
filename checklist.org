@@ -3,7 +3,7 @@
 #+EMAIL: gheber@hdfgroup.org
 #+DATE: [2021-01-13 Wed]
 
-#+PROPERTY: header-args :exports both
+#+PROPERTY: header-args :eval never-export :exports both
 
 * Emacs
 
