@@ -1,0 +1,125 @@
+#+TITLE: Literate HDF5 Checklist
+#+AUTHOR: Gerd Heber
+#+EMAIL: gheber@hdfgroup.org
+#+DATE: [2021-01-13 Wed]
+
+#+PROPERTY: header-args :exports both
+
+* Emacs
+
+This document was tested with the following software versions:
+
+#+begin_src emacs-lisp
+
+(princ (concat
+        (format "Emacs version: %s\n"
+                (emacs-version))
+        (format "org version: %s\n"
+                (org-version))
+        (format "org-babel-C-compiler: %s\n"
+                org-babel-C-compiler)
+        (format "org-babel-C++-compiler: %s\n"
+                org-babel-C++-compiler)))
+
+#+end_src
+
+#+RESULTS:
+: Emacs version: GNU Emacs 27.1.90 (build 3, x86_64-pc-linux-gnu, GTK+ Version 3.24.5)
+:  of 2021-01-09
+: org version: 9.4.4
+: org-babel-C-compiler: gcc
+: org-babel-C++-compiler: g++
+
+* Environment
+
+#+begin_src sh
+
+echo $PATH
+
+#+end_src
+
+#+RESULTS:
+: /home/gerdheber/.local/bin:/home/gerdheber/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games
+
+#+begin_src sh
+
+echo $LD_LIBRARY_PATH
+
+#+end_src
+
+#+RESULTS:
+: /home/gerdheber/.local/lib:
+
+* C/C++
+
+#+name: cc
+#+begin_src emacs-lisp :results silent :exports none
+org-babel-C-compiler
+#+end_src
+
+#+begin_src sh :var cc=cc :exports both :results output
+
+$cc --version
+
+#+end_src
+
+#+RESULTS:
+: gcc (Debian 8.3.0-6) 8.3.0
+: Copyright (C) 2018 Free Software Foundation, Inc.
+: This is free software; see the source for copying conditions.  There is NO
+: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+:
+
+#+name: cpp
+#+begin_src emacs-lisp :results silent :exports none
+org-babel-C++-compiler
+#+end_src
+
+#+begin_src sh :var cpp=cpp :exports both :results output
+
+g++ --version
+
+#+end_src
+
+#+RESULTS:
+: g++ (Debian 8.3.0-6) 8.3.0
+: Copyright (C) 2018 Free Software Foundation, Inc.
+: This is free software; see the source for copying conditions.  There is NO
+: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+:
+
+#+begin_src sh :results panel output
+
+h5cc --version
+
+#+end_src
+
+#+RESULTS:
+: gcc (Debian 8.3.0-6) 8.3.0
+: Copyright (C) 2018 Free Software Foundation, Inc.
+: This is free software; see the source for copying conditions.  There is NO
+: warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+:
+
+* Python
+
+#+begin_src sh :results output
+
+python3 --version
+
+#+end_src
+
+#+RESULTS:
+: Python 3.7.3
+
+#+begin_src python :results output
+
+import sys
+print("Python {}.{}.{}".format(sys.version_info.major,
+                               sys.version_info.minor,
+                               sys.version_info.micro))
+
+#+end_src
+
+#+RESULTS:
+: Python 3.7.3
