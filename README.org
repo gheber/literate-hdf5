@@ -10,7 +10,7 @@
 - [[file:./fsm.org][Tracking HDF5 Free Space]]
 - [[file:./core-vfd.org][Using Memory-Backed HDF5 Files to Reduce Storage Access and Size]]
 
-* To Gentiles
+* Cohortatio ad Gentiles
 
 Enjoy perusing the Org (text!) files rendered reasonably well courtesy of
 [[https://github.com/][GitHub]].  Believe it or not, all artifacts (code examples, images, etc.) are
@@ -18,7 +18,7 @@ generated from the Org files, but they are repeated /for your convenience/ in
 the appropriate sub-directories.
 
 If you develop a sense that you are missing a lot, consider [[https://www.youtube.com/channel/UCAiiOTio8Yu69c3XnR7nQBQ][learning Emacs]] and
-become an [[https://www.masteringemacs.org/][Emacs master]].
+becoming an [[https://www.masteringemacs.org/][Emacs master]].
 
 * To Emacs Users
 
