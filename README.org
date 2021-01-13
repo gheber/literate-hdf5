@@ -28,11 +28,11 @@ inspiration. Check it out!
 For your own sanity and that of those around you, I recommend you first run
 through the [[file:./checklist.org][checklist]].
 
-There are several ways to run the C examples contained in these documents.
-You can execute the code blocks containing =main= functions directly via =C-c
-C-c,= provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]] knows
-where to find the HDF5 header files and library. If the =h5cc= compiler wrapper
-is in your =PATH=, execute the following block:
+There are several ways to run the C examples contained in these documents.  You
+can execute the code blocks containing =main= functions directly via =C-c C-c= ,
+provided the HDF5 library is in their =LD_LIBRARY_PATH= and [[https://gcc.gnu.org/][GCC]] knows where to
+find the HDF5 header files and library. If the =h5cc= compiler wrapper is in
+your =PATH=, execute the following block:
 
 #+begin_src emacs-lisp :results silent
 
