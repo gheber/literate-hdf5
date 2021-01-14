@@ -88,3 +88,32 @@ Or run =make tangle= for wholesale "entanglement."
 
 The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
 include and library paths for HDF5, MPI, etc.
+
+Finally, you can create a static HTML dump of this project by configuring the
+=org-publish-project-alist= variable. For example:
+
+#+begin_src emacs-lisp
+
+(setq org-publish-project-alist
+ '(("literate-hdf5"
+    :base-directory "~/GitHub/literate-hdf5"
+    :base-extension "org"
+    :publishing-function org-html-publish-to-html
+    :publishing-directory "~/public_html"
+    :section-numbers nil
+    :table-of-contents nil
+    :auto-preamble t)
+   ("literate-hdf5-supplement"
+    :base-directory "~/GitHub/literate-hdf5"
+    :base-extension "css\\|png\\|jpg\\|gif"
+    :publishing-directory "~/public_html/"
+    :recursive t
+    :publishing-function org-publish-attachment)))
+
+#+end_src
+
+Run =C-c C-e P x= and select the respective component. The =literate-hdf5=
+component generates the HTML, while =literate-hdf5-supplement= copies the
+images, etc.
+
+See [[https://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html][Publishing Org-mode files to HTML]] for details.
