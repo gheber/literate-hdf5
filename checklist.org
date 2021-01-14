@@ -77,7 +77,7 @@ org-babel-C++-compiler
 
 #+begin_src sh :var cpp=cpp
 
-g++ --version
+$cpp --version
 
 #+end_src
 
