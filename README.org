@@ -84,5 +84,7 @@ from the command line by running
 
    #+end_example
 
+Or run =make tangle= for wholesale "entanglement."
+
 The code can then be compiled with =gcc --std=gnu99 ...= and the appropriate
 include and library paths for HDF5, MPI, etc.
