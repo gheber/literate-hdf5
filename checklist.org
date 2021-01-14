@@ -123,3 +123,10 @@ print("Python {}.{}.{}".format(sys.version_info.major,
 
 #+RESULTS:
 : Python 3.7.3
+
+#+begin_src emacs-lisp :results value
+org-babel-python-command
+#+end_src
+
+#+RESULTS:
+: python3
