@@ -110,7 +110,42 @@ int main()
 #+RESULTS:
 : 196.0
 
-I can live with that.
+I can live with that, because now I can break this up into:
+
+#+header: :flags "-I./src" :libs "-lhdf5"
+#+begin_src C -r -n :tangle src/lambda-noweb.c :noweb yes :exports both
+
+#include "literate-hdf5.h"
+
+int main()
+{
+  unsigned majnum, minnum, relnum;
+  H5get_libversion(&majnum, &minnum, &relnum);
+
+  printf
+    ("%f\n",
+     (*
+      <<lambda-square>>) (majnum+minnum+relnum)
+     );
+
+  return 0;
+}
+
+#+end_src
+
+#+RESULTS:
+: 196.0
+
+and
+
+#+begin_src C -r -n :noweb-ref lambda-square
+lambda (float, (float x),
+        {
+          return x*x;
+        })
+#+end_src
+
+No global variables and no obscure references!
 
 * COMMENT Local Variables
 
