@@ -13,7 +13,7 @@
 * Caveat Emptor
 
 Each example in this collection tells a story and, to a degree, is fiction. The
-reality and demands of professional software developments are much harsher, and
+reality and demands of professional software development are much harsher, and
 are /not/ met by the code examples provided. For example, no error detection or
 handling was attempted, and attentive readers will easily identify several
 corner cases that were not considered. The code examples in this collection are
