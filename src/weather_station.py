@@ -11,7 +11,7 @@ with h5py.File('hello.hdf5', 'w') as f:
     temperature = np.random.random(1024)
     dt = 10.0   # Temperature sampled every 10 seconds
     wind = np.random.random(2048)
-    dt_wind = 5.0   # Wind sampled every 5 seconds
+    dt_wind = 5.0   # Wind speed sampled every 5 seconds
     f['/15/temperature'] = temperature
     f['/15/temperature'].attrs['dt'] = dt
     f['/15/wind'] = wind

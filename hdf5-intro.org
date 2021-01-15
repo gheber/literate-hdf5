@@ -9,6 +9,10 @@
 
 * Outline
 
+To understand HDF5 is more than a technical exercise.
+
+HDF5 wasn't designed by committee. It's the result of an evolutionary process.
+
 #+begin_src plantuml :file img/outline.png :exports results
 @startmindmap
 scale 1
@@ -54,9 +58,17 @@ BackgroundColor lightgreen
 #+RESULTS:
 [[file:img/outline.png]]
 
+HDF5 is what it is because of how different communities use it to solve data
+management problems.
+
+We will tell you a little bit about ourselves (The HDF Group), the stewards and
+maintainers of HDF5 software and technologies.
+
+Last but not least, HDF5 couldn't endure and thrive without an ecosystem.
+
 * The HDF Group
 
-Non-profit company on a mission:
+A non-profit company on a mission:
 
 #+begin_quote
 /To make the management of large & complex data as simple as possible, but no
@@ -70,6 +82,16 @@ simpler./
 - Technical excellence
 - Diverse community
 
+We were excited about big data 20 years ago and welcome the new generation of
+"dataphiles."  Today, we are no less excited about big data, but also about the
+new processing and storage capabilities and /economies/.
+
+We are working hard to bring the associated benefits to our users and customers
+while protecting their current investment.
+
+_Our biggest challenge_: HDF spreads through word-of-mouth and not
+marketing. Spread the word!
+
 * The HDF Community
 
 It's hard to find a walk of life /not/ touched by HDF5. (Maybe literary studies?)
@@ -79,9 +101,19 @@ It's hard to find a walk of life /not/ touched by HDF5. (Maybe literary studies?
 - Organizations (NASA, DOE, CEA, ITER, DESY)
 - Standards bodies (OGC, EXPRESS, Allotrope, CGNS, RESQML)
 - Sectors (aerospace, oil & gas, pharma, power systems, finance)
-- Research (astronomy, life science, material science, ML)
+- Research (astronomy, life science, materials science, ML)
 - Data integrators, life cycle managers
 - Developers
+
+We like to speak of the HDF5 communtiy as an iceberg, of which we see only about
+10%. Despite our best efforts, we usally find out that someone is using our software
+"by accident." That leaves plenty of room for interpretation:
+
+- People don't know of our existence (we have some evidence of that)
+- Our product is perfect and there's no need for any further communication (we
+  know better)
+- We are such terrible people that nobody wants to talk to us (perhaps)
+- ...
 
 * Starting Point
 
@@ -95,6 +127,10 @@ It's hard to find a walk of life /not/ touched by HDF5. (Maybe literary studies?
   1. Maintaining data integrity
   2. Leaving clues for the interpretive base
   3. Removing "data friction"
+
+Many challenges around data management are not exactly new. Big Data's three Vs
+(volume, velocity, variety) turn what used to be mere inconvenience into major
+pain points.
 
 * H - D - F - 5
 
@@ -208,7 +244,15 @@ The introduction to [[https://g.co/kgs/dZehBL][Andrew Collette's]] [[https://www
 #+ATTR_LATEX: :width 300px
 [[file:./img/Python_and_HDF5.png]]
 
-begins with an intuitive example:
+begins with an intuitive example.
+
+Suppose we have multiple weather stations for which we would like to record
+temperature and wind speed time series. Let's also assume that we acquire those
+samples at fixed sampling intervals.
+
+This snippet of Python code shows how to arrange measurements from multiple
+stations in a single HDF5 container and how to capture important metadata such
+as platform characteristics and sampling rates.
 
 #+begin_src python -n :exports both :tangle "src/weather_station.py" :results output
 
@@ -225,7 +269,7 @@ with h5py.File('hello.hdf5', 'w') as f:
     temperature = np.random.random(1024)
     dt = 10.0   # Temperature sampled every 10 seconds
     wind = np.random.random(2048)
-    dt_wind = 5.0   # Wind sampled every 5 seconds
+    dt_wind = 5.0   # Wind speed sampled every 5 seconds
     f['/15/temperature'] = temperature
     f['/15/temperature'].attrs['dt'] = dt
     f['/15/wind'] = wind
@@ -284,9 +328,14 @@ skinparam rectangle {
     roundCorner<<Concept>> 25
 }
 
-rectangle "Array Variable" <<Concept>> {
-  artifact " attribute "
-  node "datset"
+rectangle "Variable" <<Concept>> {
+  rectangle "Map" <<Concept>> {
+    frame " map "
+  }
+  rectangle "Array" <<Concept>> {
+    artifact " attribute "
+    node "datset"
+  }
 }
 
 rectangle "Grouping" <<Concept>> {
@@ -300,7 +349,17 @@ rectangle "Grouping" <<Concept>> {
 (Datasets and attributes are /roles/ in which array variables can be used in HDF5,
 and different rules apply to them.)
 
+People often miss the /simplicity/ of the HDF5 data model for irrelvant technical
+details. HDF5 represents data as (values of) variables and relationships among
+them. Isn't that how mathematical models work? If there is any secret sauce to
+HDF5, this is it, and it's hidden in plain sight.
+
 * Ecosystem
+
+HDF5 couldn't survive without users, without CONTRIBUTORS, or without an
+ecosystem. Unless you are writing C code all the time (condolences!), it's very
+likely that you are benefitting from the work of someone who doesn't work for
+The HDF Group. Support us to support them, or support them directly!
 
 ** Language bindings
 
@@ -348,7 +407,7 @@ The basic flow is as follows:
 
 int main(int argc, char** argv)
 {
-  hid_t fapl, file, dset, file_space, mem_space;
+  hid_t fapl, file, dset, file_space;
   float* buffer;
   hsize_t file_size;
 
@@ -367,6 +426,55 @@ int main(int argc, char** argv)
 }
 
 #+end_src
+
+#+begin_src sh :exports both
+h5dump -pBH single-proc.h5
+#+end_src
+
+#+RESULTS:
+#+begin_example
+HDF5 "single-proc.h5" {
+SUPER_BLOCK {
+   SUPERBLOCK_VERSION 0
+   FREELIST_VERSION 0
+   SYMBOLTABLE_VERSION 0
+   OBJECTHEADER_VERSION 0
+   OFFSET_SIZE 8
+   LENGTH_SIZE 8
+   BTREE_RANK 16
+   BTREE_LEAF 4
+   ISTORE_K 32
+   FILE_SPACE_STRATEGY H5F_FSPACE_STRATEGY_FSM_AGGR
+   FREE_SPACE_PERSIST FALSE
+   FREE_SPACE_SECTION_THRESHOLD 1
+   FILE_SPACE_PAGE_SIZE 4096
+   USER_BLOCK {
+      USERBLOCK_SIZE 0
+   }
+}
+GROUP "/" {
+   DATASET "1Mi-floats" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 1048576 ) / ( 1048576 ) }
+      STORAGE_LAYOUT {
+         CONTIGUOUS
+         SIZE 4194304
+         OFFSET 2048
+      }
+      FILTERS {
+         NONE
+      }
+      FILLVALUE {
+         FILL_TIME H5D_FILL_TIME_IFSET
+         VALUE  H5D_FILL_VALUE_DEFAULT
+      }
+      ALLOCATION_TIME {
+         H5D_ALLOC_TIME_LATE
+      }
+   }
+}
+}
+#+end_example
 
 *** Multiple MPI processes writing to a single dataset in a shared file
 
@@ -409,7 +517,7 @@ int main(int argc, char** argv)
   <<mpi-boilerplate>>
 
   {
-    hid_t fapl, file, dset, file_space, mem_space;
+    hid_t fapl, file, dset, file_space;
     float* buffer;
     hsize_t file_size;
 
@@ -684,9 +792,6 @@ int main(int argc, char** argv)
 
   #+end_src
 
-  #+RESULTS:
-  : 32141
-
 **** =<<read-image-bytes>>=
 
   #+begin_src C :noweb-ref read-image-bytes :exports code
@@ -793,7 +898,7 @@ global                   Dataset {128/128, 3/3}
     Type:      native unsigned char
 #+end_example
 
-Use [[https://portal.hdfgroup.org/display/HDFVIEW/HDFView][HDFView]] to look at the image!
+Use [[https://portal.hdfgroup.org/display/HDFVIEW/HDFView][HDFView]] to look at the image! (*TODO* Add a screenshot!)
 
 Finally we copy the pixel and palette datasets to =hello.hdf5=.
 
@@ -877,16 +982,10 @@ Opened "hello.hdf5" with sec2 driver.
         Type:      4-byte null-terminated ASCII string
     Attribute: PALETTE scalar
         Type:      object reference
-    Location:  1:381709
+    Location:  1:347520
     Links:     1
     Storage:   307200 logical bytes, 307200 allocated bytes, 100.00% utilization
     Type:      native unsigned char
-/bytes                   Dataset {SCALAR}
-    Location:  1:40320
-    Links:     1
-    Storage:   32141 logical bytes, 32141 allocated bytes, 100.00% utilization
-    Type:      32141-byte opaque type
-               (tag = "image/png")
 /compound                Dataset {100/100}
     Attribute: D scalar
         Type:      native double
@@ -906,15 +1005,170 @@ Opened "hello.hdf5" with sec2 driver.
     Links:     1
     Storage:   1600 logical bytes, 1600 allocated bytes, 100.00% utilization
     Type:      native double
-/~obj_pointed_by_382077  Dataset {128/128, 3/3}
+/~obj_pointed_by_347888  Dataset {128/128, 3/3}
     Attribute: CLASS scalar
         Type:      8-byte null-terminated ASCII string
     Attribute: PAL_VERSION scalar
         Type:      4-byte null-terminated ASCII string
-    Location:  1:382077
+    Location:  1:347888
     Links:     2
     Storage:   384 logical bytes, 384 allocated bytes, 100.00% utilization
     Type:      native unsigned char
+#+end_example
+
+#+begin_src sh :results output
+h5dump -BH hello.hdf5
+#+end_src
+
+#+RESULTS:
+#+begin_example
+HDF5 "hello.hdf5" {
+SUPER_BLOCK {
+   SUPERBLOCK_VERSION 0
+   FREELIST_VERSION 0
+   SYMBOLTABLE_VERSION 0
+   OBJECTHEADER_VERSION 0
+   OFFSET_SIZE 8
+   LENGTH_SIZE 8
+   BTREE_RANK 16
+   BTREE_LEAF 4
+   ISTORE_K 32
+   FILE_SPACE_STRATEGY H5F_FSPACE_STRATEGY_FSM_AGGR
+   FREE_SPACE_PERSIST FALSE
+   FREE_SPACE_SECTION_THRESHOLD 1
+   FILE_SPACE_PAGE_SIZE 4096
+   USER_BLOCK {
+      USERBLOCK_SIZE 32768
+   }
+}
+GROUP "/" {
+   ATTRIBUTE "processor" {
+      DATATYPE  H5T_STRING {
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+   }
+   ATTRIBUTE "release" {
+      DATATYPE  H5T_STRING {
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+   }
+   ATTRIBUTE "system" {
+      DATATYPE  H5T_STRING {
+         STRSIZE H5T_VARIABLE;
+         STRPAD H5T_STR_NULLTERM;
+         CSET H5T_CSET_UTF8;
+         CTYPE H5T_C_S1;
+      }
+      DATASPACE  SCALAR
+   }
+   GROUP "15" {
+      DATASET "temperature" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 1024 ) / ( 1024 ) }
+         ATTRIBUTE "dt" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SCALAR
+         }
+      }
+      DATASET "wind" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 2048 ) / ( 2048 ) }
+         ATTRIBUTE "dt" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SCALAR
+         }
+      }
+   }
+   DATASET "Image0" {
+      DATATYPE  H5T_STD_U8LE
+      DATASPACE  SIMPLE { ( 480, 640 ) / ( 480, 640 ) }
+      ATTRIBUTE "CLASS" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 6;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "IMAGE_SUBCLASS" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 14;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "IMAGE_VERSION" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 4;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "PALETTE" {
+         DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
+         DATASPACE  SCALAR
+      }
+   }
+   DATASET "compound" {
+      DATATYPE  H5T_COMPOUND {
+         H5T_IEEE_F64LE "time";
+         H5T_IEEE_F64LE "position";
+      }
+      DATASPACE  SIMPLE { ( 100 ) / ( 100 ) }
+      ATTRIBUTE "D" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "dt" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "μ" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SCALAR
+      }
+   }
+   DATASET "t_x" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SIMPLE { ( 100, 2 ) / ( 100, 2 ) }
+   }
+   DATASET "~obj_pointed_by_347888" {
+      DATATYPE  H5T_STD_U8LE
+      DATASPACE  SIMPLE { ( 128, 3 ) / ( 128, 3 ) }
+      ATTRIBUTE "CLASS" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 8;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+      ATTRIBUTE "PAL_VERSION" {
+         DATATYPE  H5T_STRING {
+            STRSIZE 4;
+            STRPAD H5T_STR_NULLTERM;
+            CSET H5T_CSET_ASCII;
+            CTYPE H5T_C_S1;
+         }
+         DATASPACE  SCALAR
+      }
+   }
+}
+}
 #+end_example
 
 We can extract the so-called /user block/ at the beginning of the file with =h5unjam=:
@@ -996,11 +1250,15 @@ buffer = (float*) malloc(SIZE*sizeof(float));
     buffer[i] = (float) i;
 }
 
-mem_space = H5Screate_simple(1, (hsize_t[]) { SIZE }, NULL); // (ref:msp)
-H5Sselect_all(mem_space); // (ref:msp-sel)
+{
+  hid_t mem_space = H5Screate_simple(1, (hsize_t[]) { SIZE }, NULL); // (ref:msp)
+  H5Sselect_all(mem_space); // (ref:msp-sel)
 
-H5Dwrite(dset, H5T_NATIVE_FLOAT, mem_space, file_space, H5P_DEFAULT,
+  H5Dwrite(dset, H5T_NATIVE_FLOAT, mem_space, file_space, H5P_DEFAULT,
          buffer);
+
+  H5Sclose(mem_space);
+}
 
 #+end_src
 
@@ -1014,7 +1272,6 @@ must be released eventually.
 
 H5Pclose(fapl);
 free(buffer);
-H5Sclose(mem_space);
 H5Sclose(file_space);
 H5Dclose(dset);
 H5Fclose(file);
