@@ -14,7 +14,7 @@ To understand HDF5 is more than a technical exercise.
 
 HDF5 wasn't designed by committee. It's the result of an evolutionary process.
 
-#+begin_src plantuml :file img/outline.png :exports results
+#+begin_src plantuml :hidden :file img/outline.png :exports results
 @startmindmap
 scale 1
 <style>
@@ -161,7 +161,7 @@ simplicity, performance, and portability.
 
 Items are presented in a /hierarchically structured name space/
 
-#+begin_src plantuml :file img/hdf5-container.png :exports results
+#+begin_src plantuml :hidden :file img/hdf5-container.png :exports results
 scale 1
 actor User #red
 rectangle "HDF5 Container" {
@@ -196,7 +196,7 @@ User -> B
 Data is "caught" in a /web of objects./ Links and nodes can be pre-defined or
 user-defined items.
 
-#+begin_src plantuml :file img/technical-detail.png :exports results
+#+begin_src plantuml :hidden :file img/technical-detail.png :exports results
 scale 1
 card "/" as root
 interface " " as i1a
@@ -297,7 +297,7 @@ variables (=temperature= and =wind=) per grouping. This is almost accurate, exce
 that all weather station groupings are part of the so-called /root group/, and
 that there are additional decorations (system characteristics, sampling rates).
 
-#+begin_src plantuml :file img/hello-hdf5.png :exports results
+#+begin_src plantuml :hidden :file img/hello-hdf5.png :exports results
 scale 1
 actor User #red
 rectangle "HDF5 Container" {
@@ -323,7 +323,7 @@ Speaking informally, the HDF5 data model includes /two primitives/ and a set of
 combination rules. HDF5 is about describing array variables and their
 relationships.
 
-#+begin_src plantuml :file img/hdf5-primitives.png :exports results
+#+begin_src plantuml :hidden :file img/hdf5-primitives.png :exports results
 scale 1.5
 skinparam rectangle {
     roundCorner<<Concept>> 25
@@ -350,10 +350,10 @@ rectangle "Grouping" <<Concept>> {
 (Datasets and attributes are /roles/ in which array variables can be used in HDF5,
 and different rules apply to them.)
 
-People often miss the /simplicity/ of the HDF5 data model for irrelvant technical
-details. HDF5 represents data as (values of) variables and relationships among
-them. Isn't that how mathematical models work? If there is any secret sauce to
-HDF5, this is it, and it's hidden in plain sight.
+People often miss the /simplicity/ of the HDF5 data model for irrelevant
+technical details. HDF5 represents data as (values of) variables and
+relationships among them. Isn't that how mathematical models work? If there is
+any "secret sauce" to HDF5, this is it, and it's hidden in plain sight.
 
 * Ecosystem
 
