@@ -162,7 +162,7 @@ simplicity, performance, and portability.
 Items are presented in a /hierarchically structured name space/
 
 #+begin_src plantuml :hidden :file img/hdf5-container.png :exports results
-scale 1
+scale 2
 actor User #red
 rectangle "HDF5 Container" {
 card B [
@@ -197,7 +197,7 @@ Data is "caught" in a /web of objects./ Links and nodes can be pre-defined or
 user-defined items.
 
 #+begin_src plantuml :hidden :file img/technical-detail.png :exports results
-scale 1
+scale 1.5
 card "/" as root
 interface " " as i1a
 interface " " as i1b
@@ -215,7 +215,7 @@ i2c --> i3a : "Level 3a"
 i1a --> i2d : "Level 2d"
 root --> i1b #line:red;line.bold;text:red : "Level 1b"
 i1b --> i2e #green;line.dashed;text:green : "Level 2e"
-    #+end_src
+#+end_src
 
     #+RESULTS:
     [[file:img/technical-detail.png]]
@@ -298,7 +298,7 @@ that all weather station groupings are part of the so-called /root group/, and
 that there are additional decorations (system characteristics, sampling rates).
 
 #+begin_src plantuml :hidden :file img/hello-hdf5.png :exports results
-scale 1
+scale 2
 actor User #red
 rectangle "HDF5 Container" {
 card B [
@@ -385,6 +385,24 @@ Play store]].
 on your computer!
 
 ** HPC (aka. Parallel HDF5) <<sec:hpc>>
+
+#+begin_src plantuml :hidden :file img/phdf5.png :exports results
+scale 1.5
+participant P1
+participant P2
+participant Pi as "P#"
+participant Pn
+database PFS
+group Parallel
+    P1 -> PFS : write at offset ""0""
+    P2 -> PFS : write at offset ""1*size""
+    Pi --> PFS : write at offset ""(#-1)*size""
+    Pn -> PFS : write at offset ""(n-1)*size""
+end
+#+end_src
+
+#+RESULTS:
+[[file:img/phdf5.png]]
 
  Below we illustrate how to transition from a single process writing to a
  dataset to multiple MPI-processes writing to different parts of a single
@@ -553,7 +571,7 @@ Readey's [[https://www.youtube.com/watch?v=9b5TO7drqqE][presentation]].
 
 *CAUTION:* To work with HDF5 in cloud-based environments means different things to
 different audiences. Without context, it means just this:
-#+begin_src plantuml :file img/cloud-hdf5.png :exports results
+#+begin_src plantuml :hidden :file img/cloud-hdf5.png :exports results
 scale 2
 cloud " HDF5 "
     #+end_src
