@@ -4,7 +4,8 @@
 #+CREATOR: <a href="http://www.gnu.org/software/emacs/">Emacs</a> 27.1.90 (<a href="http://orgmode.org">Org</a> mode 9.4.4)
 #+DATE: [2021-01-01 Fri]
 #+OPTIONS: author:t creator:t email:t toc:nil num:nil
-#+STARTUP: latexpreview
+
+#+STARTUP: overview
 
 #+PROPERTY: header-args :eval never-export
 
@@ -579,7 +580,7 @@ cloud " HDF5 "
     #+RESULTS:
     [[file:img/cloud-hdf5.png]]
 
-*  Simple Data Analysis
+* A Simple Data Analysis
 
 *Reference:* [[https://www.youtube.com/watch?v=AP4LX8L7MFM][Reproducible Research with GNU Emacs and Org-mode]] by Thibault
 Lestang
