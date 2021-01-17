@@ -1300,6 +1300,6 @@ H5Fclose(file);
 * COMMENT Local Variables
 
 # Local Variables:
-# org-html-head: "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/stylesheet.css\" />"
 # org-coderef-label-format: "// (ref:%s)"
+# after-save-hook: org-preview-latex-fragment
 # End:
